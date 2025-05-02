@@ -1,11 +1,9 @@
 
-import { useEffect, useRef } from "react";
-import { Chart, registerables } from "chart.js";
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useStudentData, Student } from "@/contexts/StudentDataContext";
-
-Chart.register(...registerables);
+import { LineChart as RechartsLineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 interface LineChartProps {
   selectedStudent: Student;
@@ -13,8 +11,6 @@ interface LineChartProps {
 }
 
 const LineChart = ({ selectedStudent, onStudentChange }: LineChartProps) => {
-  const chartRef = useRef<HTMLCanvasElement | null>(null);
-  const chartInstance = useRef<Chart | null>(null);
   const { students } = useStudentData();
   
   // Find selected student if it doesn't exist
@@ -24,67 +20,18 @@ const LineChart = ({ selectedStudent, onStudentChange }: LineChartProps) => {
     }
   }, [selectedStudent, students, onStudentChange]);
 
-  useEffect(() => {
-    if (!chartRef.current || !selectedStudent) return;
-
-    const ctx = chartRef.current.getContext('2d');
-    
-    if (!ctx) return;
-    
-    // Destroy previous chart instance
-    if (chartInstance.current) {
-      chartInstance.current.destroy();
-    }
-    
-    chartInstance.current = new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: selectedStudent.history.map((_, i) => `${i + 1}`),
-        datasets: [{
-          label: selectedStudent.name,
-          data: selectedStudent.history,
-          borderColor: 'rgb(59, 130, 246)',
-          backgroundColor: 'rgba(59, 130, 246, 0.2)',
-          tension: 0.2,
-          borderWidth: 2,
-          pointBackgroundColor: 'rgb(59, 130, 246)',
-          pointRadius: 4,
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        scales: {
-          y: {
-            beginAtZero: true,
-            max: 10,
-            ticks: {
-              stepSize: 1
-            }
-          }
-        },
-        plugins: {
-          legend: {
-            display: true
-          }
-        }
-      }
-    });
-
-    // Clean up on unmount
-    return () => {
-      if (chartInstance.current) {
-        chartInstance.current.destroy();
-      }
-    };
-  }, [selectedStudent]);
-
   const handleStudentChange = (value: string) => {
     const student = students.find(s => s.id.toString() === value);
     if (student) {
       onStudentChange(student);
     }
   };
+
+  // Convert history data to format expected by Recharts
+  const chartData = selectedStudent?.history.map((value, index) => ({
+    name: `${index + 1}`,
+    value: value
+  })) || [];
 
   if (!selectedStudent) return null;
 
@@ -110,7 +57,26 @@ const LineChart = ({ selectedStudent, onStudentChange }: LineChartProps) => {
       </CardHeader>
       <CardContent className="pt-0">
         <div className="h-64">
-          <canvas ref={chartRef}></canvas>
+          <ResponsiveContainer width="100%" height="100%">
+            <RechartsLineChart 
+              data={chartData}
+              margin={{ top: 5, right: 20, left: 0, bottom: 5 }}
+            >
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="name" />
+              <YAxis domain={[0, 10]} ticks={[0, 2, 4, 6, 8, 10]} />
+              <Tooltip />
+              <Line 
+                type="monotone" 
+                dataKey="value" 
+                name={selectedStudent.name}
+                stroke="#3b82f6" 
+                strokeWidth={2}
+                activeDot={{ r: 6 }}
+                dot={{ r: 4 }}
+              />
+            </RechartsLineChart>
+          </ResponsiveContainer>
         </div>
       </CardContent>
     </Card>
