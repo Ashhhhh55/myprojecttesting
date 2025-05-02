@@ -5,14 +5,20 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 
-const StudentControls = () => {
+interface StudentControlsProps {
+  isGuest?: boolean;
+}
+
+const StudentControls = ({ isGuest = false }: StudentControlsProps) => {
   const { students, updateStudentLevel } = useStudentData();
 
   const handleSliderChange = (studentId: number, newValue: number[]) => {
+    if (isGuest) return;
     updateStudentLevel(studentId, newValue[0]);
   };
 
   const handleInputChange = (studentId: number, value: string) => {
+    if (isGuest) return;
     const numValue = parseInt(value, 10);
     if (!isNaN(numValue)) {
       updateStudentLevel(studentId, numValue);
@@ -23,6 +29,9 @@ const StudentControls = () => {
     <Card>
       <CardHeader>
         <CardTitle className="text-lg md:text-xl arabic-text rtl">التحكم</CardTitle>
+        {isGuest && (
+          <div className="text-sm text-amber-500">View-only mode</div>
+        )}
       </CardHeader>
       <CardContent>
         <div className="space-y-6">
@@ -43,6 +52,7 @@ const StudentControls = () => {
                   value={student.level}
                   onChange={(e) => handleInputChange(student.id, e.target.value)}
                   className="w-16 text-center"
+                  disabled={isGuest}
                 />
               </div>
               
@@ -53,7 +63,8 @@ const StudentControls = () => {
                 step={1}
                 value={[student.level]}
                 onValueChange={(value) => handleSliderChange(student.id, value)}
-                className="w-full"
+                className={`w-full ${isGuest ? "opacity-70 cursor-not-allowed" : ""}`}
+                disabled={isGuest}
               />
             </div>
           ))}

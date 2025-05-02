@@ -9,6 +9,7 @@ import OutsideGraph from "./OutsideGraph";
 import NotesSection from "./NotesSection";
 import Header from "./Header";
 import { useStudentData } from "@/contexts/StudentDataContext";
+import { useUser } from "@/contexts/UserContext";
 
 interface DashboardProps {
   setIsLoggedIn: (value: boolean) => void;
@@ -16,16 +17,23 @@ interface DashboardProps {
 
 const Dashboard = ({ setIsLoggedIn }: DashboardProps) => {
   const { students, resetAllData } = useStudentData();
+  const { currentUser } = useUser();
   const [selectedStudent, setSelectedStudent] = useState(students[0]);
+  const isGuest = localStorage.getItem('isGuest') === 'true' || currentUser === 'Guest';
 
   const handleLogout = () => {
     localStorage.removeItem('isLoggedIn');
+    localStorage.removeItem('isGuest');
     setIsLoggedIn(false);
   };
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header onLogout={handleLogout} onReset={resetAllData} />
+      <Header 
+        onLogout={handleLogout} 
+        onReset={resetAllData} 
+        isGuest={isGuest} 
+      />
 
       <div className="container py-6">
         <div className="grid gap-6">
@@ -39,7 +47,7 @@ const Dashboard = ({ setIsLoggedIn }: DashboardProps) => {
               </TabsList>
               
               <TabsContent value="controls" className="space-y-4">
-                <StudentControls />
+                <StudentControls isGuest={isGuest} />
               </TabsContent>
               
               <TabsContent value="charts" className="space-y-4">
@@ -52,7 +60,7 @@ const Dashboard = ({ setIsLoggedIn }: DashboardProps) => {
               </TabsContent>
               
               <TabsContent value="activity" className="space-y-4">
-                <NotesSection />
+                <NotesSection isGuest={isGuest} />
                 <ActivityLog />
               </TabsContent>
             </Tabs>
@@ -62,7 +70,7 @@ const Dashboard = ({ setIsLoggedIn }: DashboardProps) => {
           <div className="hidden md:grid md:grid-cols-12 gap-6">
             {/* Controls Section */}
             <div className="col-span-4">
-              <StudentControls />
+              <StudentControls isGuest={isGuest} />
             </div>
             
             {/* Charts and Activity Section */}
@@ -76,7 +84,7 @@ const Dashboard = ({ setIsLoggedIn }: DashboardProps) => {
               </div>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <OutsideGraph />
-                <NotesSection />
+                <NotesSection isGuest={isGuest} />
               </div>
               <ActivityLog />
             </div>

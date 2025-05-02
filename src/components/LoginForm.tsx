@@ -25,6 +25,7 @@ const LoginForm = ({ setIsLoggedIn }: LoginFormProps) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
+  const [showLogin, setShowLogin] = useState(false);
   const { toast } = useToast();
   const { setCurrentUser } = useUser();
 
@@ -60,62 +61,108 @@ const LoginForm = ({ setIsLoggedIn }: LoginFormProps) => {
     }
   };
 
+  const handleContinueAsGuest = () => {
+    setCurrentUser("Guest");
+    localStorage.setItem('isLoggedIn', 'true');
+    localStorage.setItem('isGuest', 'true');
+    setIsLoggedIn(true);
+    
+    toast({
+      title: "Welcome Guest",
+      description: "You can view the dashboard but cannot make changes.",
+    });
+  };
+
+  const toggleLoginForm = () => {
+    setShowLogin(!showLogin);
+  };
+
   return (
     <div className="flex items-center justify-center min-h-screen p-4 bg-gray-50">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1 text-center">
           <CardTitle className="text-2xl">ألجراف</CardTitle>
           <CardDescription>
-            Enter your credentials to access the dashboard
+            View the dashboard or login as admin to make changes
           </CardDescription>
         </CardHeader>
         
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="username">Username</Label>
-              <Input 
-                id="username"
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                required
-                placeholder="Username"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input 
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                placeholder="Password"
-              />
-            </div>
-            
-            <div className="flex items-center space-x-2">
-              <Checkbox 
-                id="rememberMe" 
-                checked={rememberMe}
-                onCheckedChange={(checked) => {
-                  setRememberMe(checked as boolean);
-                }} 
-              />
-              <label
-                htmlFor="rememberMe"
-                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+          {!showLogin ? (
+            <div className="space-y-4">
+              <Button 
+                type="button" 
+                onClick={toggleLoginForm} 
+                className="w-full"
               >
-                Remember me
-              </label>
+                Login as Admin
+              </Button>
+              <Button 
+                type="button" 
+                onClick={handleContinueAsGuest}
+                variant="outline" 
+                className="w-full"
+              >
+                Continue as Guest
+              </Button>
             </div>
-            
-            <Button type="submit" className="w-full">
-              Login
-            </Button>
-          </form>
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="username">Username</Label>
+                <Input 
+                  id="username"
+                  type="text"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  required
+                  placeholder="Username"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <Input 
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  placeholder="Password"
+                />
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                <Checkbox 
+                  id="rememberMe" 
+                  checked={rememberMe}
+                  onCheckedChange={(checked) => {
+                    setRememberMe(checked as boolean);
+                  }} 
+                />
+                <label
+                  htmlFor="rememberMe"
+                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                >
+                  Remember me
+                </label>
+              </div>
+              
+              <div className="space-y-2">
+                <Button type="submit" className="w-full">
+                  Login
+                </Button>
+                <Button 
+                  type="button"
+                  variant="ghost"
+                  className="w-full"
+                  onClick={() => setShowLogin(false)}
+                >
+                  Back
+                </Button>
+              </div>
+            </form>
+          )}
         </CardContent>
       </Card>
     </div>

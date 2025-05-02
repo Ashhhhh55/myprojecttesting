@@ -7,9 +7,10 @@ import { useUser } from "@/contexts/UserContext";
 interface HeaderProps {
   onLogout: () => void;
   onReset: () => void;
+  isGuest: boolean;
 }
 
-const Header = ({ onLogout, onReset }: HeaderProps) => {
+const Header = ({ onLogout, onReset, isGuest }: HeaderProps) => {
   const { currentUser } = useUser();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -17,38 +18,43 @@ const Header = ({ onLogout, onReset }: HeaderProps) => {
     <header className="bg-white shadow-sm sticky top-0 z-10">
       <div className="container flex justify-between items-center py-4">
         <div className="flex items-center">
-          {/* Logo would go here */}
           <h1 className="text-2xl font-bold arabic-text">ألجراف</h1>
         </div>
         
         {/* Desktop navigation */}
         <div className="hidden md:flex items-center gap-4">
           <div className="text-sm text-muted-foreground">
-            مرحباً, {currentUser}
+            {isGuest ? (
+              <span className="text-amber-500">مرحباً, Guest (View Only)</span>
+            ) : (
+              <span>مرحباً, {currentUser}</span>
+            )}
           </div>
           
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button variant="outline" size="sm">
-                Reset Data
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  This will reset all student data to default values. This action cannot be undone.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={onReset}>Reset</AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+          {!isGuest && (
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="outline" size="sm">
+                  Reset Data
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This will reset all student data to default values. This action cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={onReset}>Reset</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          )}
           
           <Button onClick={onLogout} size="sm">
-            Logout
+            {isGuest ? "Exit" : "Logout"}
           </Button>
         </div>
         
@@ -73,32 +79,38 @@ const Header = ({ onLogout, onReset }: HeaderProps) => {
         <div className="md:hidden bg-white border-t p-4">
           <div className="space-y-4">
             <div className="text-sm text-muted-foreground text-center">
-              مرحباً, {currentUser}
+              {isGuest ? (
+                <span className="text-amber-500">مرحباً, Guest (View Only)</span>
+              ) : (
+                <span>مرحباً, {currentUser}</span>
+              )}
             </div>
             
             <div className="flex flex-col gap-2">
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button variant="outline" className="w-full">
-                    Reset Data
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      This will reset all student data to default values. This action cannot be undone.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={onReset}>Reset</AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
+              {!isGuest && (
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="outline" className="w-full">
+                      Reset Data
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This will reset all student data to default values. This action cannot be undone.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={onReset}>Reset</AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              )}
               
               <Button onClick={onLogout} className="w-full">
-                Logout
+                {isGuest ? "Exit" : "Logout"}
               </Button>
             </div>
           </div>

@@ -30,29 +30,63 @@ const initialStudents: Student[] = [
   { id: 5, name: 'كريم', level: 1, history: [1], notes: '', zeroCount: 0 },
 ];
 
+// Define API endpoints - you'll need to replace with your actual backend URL
+const API_BASE_URL = 'https://your-backend-api.com'; // Replace with your API URL
+
 export const StudentDataProvider = ({ children }: { children: ReactNode }) => {
   const [students, setStudents] = useState<Student[]>([]);
   const [activityLog, setActivityLog] = useState<string[]>([]);
   const { currentUser } = useUser();
+  const isGuest = currentUser === 'Guest';
 
+  // Load data on component mount - try from API first, then fallback to localStorage
   useEffect(() => {
-    // Load data from localStorage
-    const savedStudents = localStorage.getItem('students');
-    const savedActivityLog = localStorage.getItem('activityLog');
-    
-    if (savedStudents) {
-      setStudents(JSON.parse(savedStudents));
-    } else {
-      setStudents(initialStudents);
-      localStorage.setItem('students', JSON.stringify(initialStudents));
-    }
-    
-    if (savedActivityLog) {
-      setActivityLog(JSON.parse(savedActivityLog));
-    }
+    const fetchData = async () => {
+      try {
+        // Attempt to load data from your backend API
+        const response = await fetch(`${API_BASE_URL}/students`);
+        
+        if (response.ok) {
+          const data = await response.json();
+          setStudents(data.students);
+          setActivityLog(data.activityLog || []);
+          console.log("Loaded data from server");
+        } else {
+          throw new Error("Could not fetch from server");
+        }
+      } catch (error) {
+        console.log("Falling back to localStorage", error);
+        
+        // Fallback to localStorage if API fails
+        const savedStudents = localStorage.getItem('students');
+        const savedActivityLog = localStorage.getItem('activityLog');
+        
+        if (savedStudents) {
+          setStudents(JSON.parse(savedStudents));
+        } else {
+          setStudents(initialStudents);
+          localStorage.setItem('students', JSON.stringify(initialStudents));
+        }
+        
+        if (savedActivityLog) {
+          setActivityLog(JSON.parse(savedActivityLog));
+        }
+      }
+    };
+
+    fetchData();
   }, []);
 
-  const updateStudentLevel = (studentId: number, newLevel: number) => {
+  const updateStudentLevel = async (studentId: number, newLevel: number) => {
+    if (isGuest) {
+      toast({
+        title: "Access Denied",
+        description: "Guest users cannot modify data. Please login as admin.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     if (newLevel < 0) newLevel = 0;
     if (newLevel > 10) newLevel = 10;
 
@@ -84,7 +118,7 @@ export const StudentDataProvider = ({ children }: { children: ReactNode }) => {
 
     // Log the activity
     const student = students.find(s => s.id === studentId);
-    if (student && currentUser) {
+    if (student && currentUser && !isGuest) {
       const newActivity = `${new Date().toLocaleString()}: ${currentUser} changed ${student.name}'s level to ${newLevel}`;
       
       setActivityLog(prev => {
@@ -97,10 +131,42 @@ export const StudentDataProvider = ({ children }: { children: ReactNode }) => {
         title: "Level Updated",
         description: `${student.name}'s level is now ${newLevel}`,
       });
+
+      // Attempt to sync with backend if available
+      try {
+        const response = await fetch(`${API_BASE_URL}/update-level`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            studentId,
+            newLevel,
+            updatedBy: currentUser,
+            timestamp: new Date().toISOString()
+          }),
+        });
+        
+        if (response.ok) {
+          console.log("Data synced to server");
+        }
+      } catch (error) {
+        console.error("Failed to sync with server:", error);
+        // Continue with local updates even if server sync fails
+      }
     }
   };
 
-  const updateStudentNotes = (studentId: number, notes: string) => {
+  const updateStudentNotes = async (studentId: number, notes: string) => {
+    if (isGuest) {
+      toast({
+        title: "Access Denied",
+        description: "Guest users cannot modify notes. Please login as admin.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setStudents(prevStudents => {
       const updatedStudents = prevStudents.map(student => {
         if (student.id === studentId) {
@@ -112,9 +178,41 @@ export const StudentDataProvider = ({ children }: { children: ReactNode }) => {
       localStorage.setItem('students', JSON.stringify(updatedStudents));
       return updatedStudents;
     });
+
+    // Attempt to sync with backend if available
+    try {
+      const response = await fetch(`${API_BASE_URL}/update-notes`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          studentId,
+          notes,
+          updatedBy: currentUser,
+          timestamp: new Date().toISOString()
+        }),
+      });
+      
+      if (response.ok) {
+        console.log("Notes synced to server");
+      }
+    } catch (error) {
+      console.error("Failed to sync notes with server:", error);
+      // Continue with local updates even if server sync fails
+    }
   };
 
-  const resetAllData = () => {
+  const resetAllData = async () => {
+    if (isGuest) {
+      toast({
+        title: "Access Denied",
+        description: "Guest users cannot reset data. Please login as admin.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     localStorage.removeItem('students');
     localStorage.removeItem('activityLog');
     setStudents(initialStudents);
@@ -126,6 +224,27 @@ export const StudentDataProvider = ({ children }: { children: ReactNode }) => {
       description: "All data has been reset to default values.",
       variant: "destructive"
     });
+
+    // Attempt to sync with backend if available
+    try {
+      const response = await fetch(`${API_BASE_URL}/reset-data`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          resetBy: currentUser,
+          timestamp: new Date().toISOString()
+        }),
+      });
+      
+      if (response.ok) {
+        console.log("Data reset synced to server");
+      }
+    } catch (error) {
+      console.error("Failed to sync data reset with server:", error);
+      // Continue with local reset even if server sync fails
+    }
   };
 
   return (
