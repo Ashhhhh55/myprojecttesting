@@ -1,7 +1,6 @@
 
 import { useStudentData } from "@/contexts/StudentDataContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useEffect, useRef } from "react";
 
 const BarChart = () => {
   const { students } = useStudentData();
@@ -35,8 +34,10 @@ const BarChart = () => {
               <div key={student.id} className="flex flex-col items-center w-1/6">
                 <div className="w-full flex-1 flex items-end justify-center pb-6">
                   <div 
-                    className={`w-8 ${getBarColor(student.level)} rounded-t-sm transition-all duration-500`}
-                    style={{ height: `${(student.level / 10) * 100}%` }}
+                    className={`w-8 ${getBarColor(student.level)} rounded-t-sm animate-bar-rise`}
+                    style={{ 
+                      '--bar-height': `${(student.level / 10) * 100}%`,
+                    } as React.CSSProperties}
                   ></div>
                 </div>
                 <span className="text-xs font-medium arabic-text">{student.name}</span>
