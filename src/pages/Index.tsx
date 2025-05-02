@@ -1,13 +1,31 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+
+import { useEffect, useState } from "react";
+import Dashboard from "@/components/Dashboard";
+import LoginForm from "@/components/LoginForm";
+import { UserProvider } from "@/contexts/UserContext";
+import { StudentDataProvider } from "@/contexts/StudentDataContext";
 
 const Index = () => {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  
+  useEffect(() => {
+    // Check if user is logged in from local storage
+    const loggedInStatus = localStorage.getItem("isLoggedIn") === "true";
+    setIsLoggedIn(loggedInStatus);
+  }, []);
+  
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Blank App</h1>
-        <p className="text-xl text-gray-600">Start building your amazing project here!</p>
-      </div>
-    </div>
+    <UserProvider>
+      <StudentDataProvider>
+        <div className="min-h-screen bg-gray-50">
+          {isLoggedIn ? (
+            <Dashboard setIsLoggedIn={setIsLoggedIn} />
+          ) : (
+            <LoginForm setIsLoggedIn={setIsLoggedIn} />
+          )}
+        </div>
+      </StudentDataProvider>
+    </UserProvider>
   );
 };
 
