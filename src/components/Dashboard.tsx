@@ -27,6 +27,22 @@ const Dashboard = ({ setIsLoggedIn }: DashboardProps) => {
     setIsLoggedIn(false);
   };
 
+  // Update selectedStudent when students are loaded
+  if (selectedStudent === undefined && students.length > 0) {
+    setSelectedStudent(students[0]);
+  }
+
+  if (students.length === 0) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+          <p className="mt-4 text-lg">Loading data...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Header 

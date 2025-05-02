@@ -2,6 +2,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { toast } from '@/components/ui/use-toast';
 import { useUser } from './UserContext';
+import { supabase } from '@/integrations/supabase/client';
 
 export interface Student {
   id: number;
@@ -30,34 +31,53 @@ const initialStudents: Student[] = [
   { id: 5, name: 'كريم', level: 1, history: [1], notes: '', zeroCount: 0 },
 ];
 
-// Define API endpoints - you'll need to replace with your actual backend URL
-const API_BASE_URL = 'https://your-backend-api.com'; // Replace with your API URL
-
 export const StudentDataProvider = ({ children }: { children: ReactNode }) => {
   const [students, setStudents] = useState<Student[]>([]);
   const [activityLog, setActivityLog] = useState<string[]>([]);
   const { currentUser } = useUser();
   const isGuest = currentUser === 'Guest';
 
-  // Load data on component mount - try from API first, then fallback to localStorage
+  // Load data on component mount - from Supabase
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Attempt to load data from your backend API
-        const response = await fetch(`${API_BASE_URL}/students`);
+        // Load students from Supabase
+        const { data: studentsData, error: studentsError } = await supabase
+          .from('students')
+          .select('*')
+          .order('id');
         
-        if (response.ok) {
-          const data = await response.json();
-          setStudents(data.students);
-          setActivityLog(data.activityLog || []);
-          console.log("Loaded data from server");
-        } else {
-          throw new Error("Could not fetch from server");
-        }
+        if (studentsError) throw studentsError;
+        
+        // Load activity logs from Supabase
+        const { data: logsData, error: logsError } = await supabase
+          .from('activity_logs')
+          .select('*')
+          .order('created_at', { ascending: false });
+        
+        if (logsError) throw logsError;
+        
+        // Format students data to match our interface
+        const formattedStudents = studentsData.map(student => ({
+          id: student.id,
+          name: student.name,
+          level: student.level,
+          history: student.history,
+          notes: student.notes,
+          zeroCount: student.zero_count
+        }));
+        
+        // Format logs data to match our interface
+        const formattedLogs = logsData.map(log => log.message);
+        
+        setStudents(formattedStudents);
+        setActivityLog(formattedLogs);
+        
+        console.log("Loaded data from Supabase");
       } catch (error) {
-        console.log("Falling back to localStorage", error);
+        console.error("Error fetching data from Supabase:", error);
         
-        // Fallback to localStorage if API fails
+        // Fallback to localStorage if Supabase fails
         const savedStudents = localStorage.getItem('students');
         const savedActivityLog = localStorage.getItem('activityLog');
         
@@ -71,6 +91,12 @@ export const StudentDataProvider = ({ children }: { children: ReactNode }) => {
         if (savedActivityLog) {
           setActivityLog(JSON.parse(savedActivityLog));
         }
+        
+        toast({
+          title: "Connection Error",
+          description: "Could not connect to the database. Using local data instead.",
+          variant: "destructive"
+        });
       }
     };
 
@@ -90,39 +116,64 @@ export const StudentDataProvider = ({ children }: { children: ReactNode }) => {
     if (newLevel < 0) newLevel = 0;
     if (newLevel > 10) newLevel = 10;
 
-    setStudents(prevStudents => {
-      const updatedStudents = prevStudents.map(student => {
-        if (student.id === studentId) {
-          const wasZero = student.level === 0;
-          const isZero = newLevel === 0;
-          
-          // Update zero count if needed
-          let zeroCount = student.zeroCount;
-          if (isZero && !wasZero) {
-            zeroCount += 1;
+    try {
+      // Find the student to update
+      const student = students.find(s => s.id === studentId);
+      if (!student) return;
+
+      const wasZero = student.level === 0;
+      const isZero = newLevel === 0;
+      
+      // Update zero count if needed
+      let zeroCount = student.zeroCount;
+      if (isZero && !wasZero) {
+        zeroCount += 1;
+      }
+      
+      // Update the student in the database
+      const { error: updateError } = await supabase
+        .from('students')
+        .update({
+          level: newLevel,
+          history: [...student.history, newLevel],
+          zero_count: zeroCount,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', studentId);
+      
+      if (updateError) throw updateError;
+      
+      // Log the activity in the database
+      const activityMessage = `${new Date().toLocaleString()}: ${currentUser} changed ${student.name}'s level to ${newLevel}`;
+      
+      const { error: logError } = await supabase
+        .from('activity_logs')
+        .insert({
+          message: activityMessage,
+        });
+      
+      if (logError) throw logError;
+      
+      // Update the local state
+      setStudents(prevStudents => {
+        const updatedStudents = prevStudents.map(s => {
+          if (s.id === studentId) {
+            return {
+              ...s,
+              level: newLevel,
+              history: [...s.history, newLevel],
+              zeroCount: zeroCount
+            };
           }
-          
-          return {
-            ...student,
-            level: newLevel,
-            history: [...student.history, newLevel],
-            zeroCount: zeroCount
-          };
-        }
-        return student;
+          return s;
+        });
+        
+        localStorage.setItem('students', JSON.stringify(updatedStudents));
+        return updatedStudents;
       });
       
-      localStorage.setItem('students', JSON.stringify(updatedStudents));
-      return updatedStudents;
-    });
-
-    // Log the activity
-    const student = students.find(s => s.id === studentId);
-    if (student && currentUser && !isGuest) {
-      const newActivity = `${new Date().toLocaleString()}: ${currentUser} changed ${student.name}'s level to ${newLevel}`;
-      
       setActivityLog(prev => {
-        const updated = [newActivity, ...prev];
+        const updated = [activityMessage, ...prev];
         localStorage.setItem('activityLog', JSON.stringify(updated));
         return updated;
       });
@@ -131,29 +182,13 @@ export const StudentDataProvider = ({ children }: { children: ReactNode }) => {
         title: "Level Updated",
         description: `${student.name}'s level is now ${newLevel}`,
       });
-
-      // Attempt to sync with backend if available
-      try {
-        const response = await fetch(`${API_BASE_URL}/update-level`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            studentId,
-            newLevel,
-            updatedBy: currentUser,
-            timestamp: new Date().toISOString()
-          }),
-        });
-        
-        if (response.ok) {
-          console.log("Data synced to server");
-        }
-      } catch (error) {
-        console.error("Failed to sync with server:", error);
-        // Continue with local updates even if server sync fails
-      }
+    } catch (error) {
+      console.error("Error updating student level:", error);
+      toast({
+        title: "Update Failed",
+        description: "Could not update the student level. Please try again.",
+        variant: "destructive"
+      });
     }
   };
 
@@ -167,39 +202,42 @@ export const StudentDataProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
 
-    setStudents(prevStudents => {
-      const updatedStudents = prevStudents.map(student => {
-        if (student.id === studentId) {
-          return { ...student, notes };
-        }
-        return student;
-      });
-      
-      localStorage.setItem('students', JSON.stringify(updatedStudents));
-      return updatedStudents;
-    });
-
-    // Attempt to sync with backend if available
     try {
-      const response = await fetch(`${API_BASE_URL}/update-notes`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          studentId,
+      // Update the student notes in the database
+      const { error } = await supabase
+        .from('students')
+        .update({
           notes,
-          updatedBy: currentUser,
-          timestamp: new Date().toISOString()
-        }),
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', studentId);
+      
+      if (error) throw error;
+      
+      // Update the local state
+      setStudents(prevStudents => {
+        const updatedStudents = prevStudents.map(student => {
+          if (student.id === studentId) {
+            return { ...student, notes };
+          }
+          return student;
+        });
+        
+        localStorage.setItem('students', JSON.stringify(updatedStudents));
+        return updatedStudents;
       });
       
-      if (response.ok) {
-        console.log("Notes synced to server");
-      }
+      toast({
+        title: "Notes Updated",
+        description: "Student notes have been saved.",
+      });
     } catch (error) {
-      console.error("Failed to sync notes with server:", error);
-      // Continue with local updates even if server sync fails
+      console.error("Error updating student notes:", error);
+      toast({
+        title: "Update Failed",
+        description: "Could not update the student notes. Please try again.",
+        variant: "destructive"
+      });
     }
   };
 
@@ -213,37 +251,68 @@ export const StudentDataProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
 
-    localStorage.removeItem('students');
-    localStorage.removeItem('activityLog');
-    setStudents(initialStudents);
-    setActivityLog([]);
-    localStorage.setItem('students', JSON.stringify(initialStudents));
-    
-    toast({
-      title: "Data Reset",
-      description: "All data has been reset to default values.",
-      variant: "destructive"
-    });
-
-    // Attempt to sync with backend if available
     try {
-      const response = await fetch(`${API_BASE_URL}/reset-data`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          resetBy: currentUser,
-          timestamp: new Date().toISOString()
-        }),
-      });
+      // Reset students table in the database
+      const { error: truncateError } = await supabase
+        .from('students')
+        .delete()
+        .not('id', 'is', null);
       
-      if (response.ok) {
-        console.log("Data reset synced to server");
-      }
+      if (truncateError) throw truncateError;
+      
+      // Insert initial data
+      const { error: insertError } = await supabase
+        .from('students')
+        .insert(
+          initialStudents.map(student => ({
+            id: student.id,
+            name: student.name,
+            level: student.level,
+            history: student.history,
+            notes: student.notes,
+            zero_count: student.zeroCount
+          }))
+        );
+      
+      if (insertError) throw insertError;
+      
+      // Reset activity logs
+      const { error: logResetError } = await supabase
+        .from('activity_logs')
+        .delete()
+        .not('id', 'is', null);
+      
+      if (logResetError) throw logResetError;
+      
+      // Add reset log
+      const resetMessage = `${new Date().toLocaleString()}: ${currentUser} reset all data`;
+      
+      const { error: logInsertError } = await supabase
+        .from('activity_logs')
+        .insert({
+          message: resetMessage
+        });
+      
+      if (logInsertError) throw logInsertError;
+      
+      // Update local state
+      setStudents(initialStudents);
+      setActivityLog([resetMessage]);
+      localStorage.setItem('students', JSON.stringify(initialStudents));
+      localStorage.setItem('activityLog', JSON.stringify([resetMessage]));
+      
+      toast({
+        title: "Data Reset",
+        description: "All data has been reset to default values.",
+        variant: "destructive"
+      });
     } catch (error) {
-      console.error("Failed to sync data reset with server:", error);
-      // Continue with local reset even if server sync fails
+      console.error("Error resetting data:", error);
+      toast({
+        title: "Reset Failed",
+        description: "Could not reset the data. Please try again.",
+        variant: "destructive"
+      });
     }
   };
 
