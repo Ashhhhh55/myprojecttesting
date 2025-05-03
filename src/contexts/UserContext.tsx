@@ -14,6 +14,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
+    // Load user information from localStorage on component mount
     const storedUser = localStorage.getItem('currentUser');
     const isGuest = localStorage.getItem('isGuest') === 'true';
     
@@ -28,8 +29,12 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
 
   const handleSetCurrentUser = (user: string | null) => {
     setCurrentUser(user);
-    setIsAdmin(user !== null && user !== 'Guest');
+    
+    // If the user is not null and not Guest, they're an admin
+    const userIsAdmin = user !== null && user !== 'Guest';
+    setIsAdmin(userIsAdmin);
 
+    // Update localStorage based on user type
     if (user && user !== 'Guest') {
       localStorage.setItem('currentUser', user);
       localStorage.removeItem('isGuest');
@@ -40,6 +45,8 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       localStorage.removeItem('currentUser');
       localStorage.removeItem('isGuest');
     }
+
+    console.log(`User set to: ${user}, isAdmin: ${userIsAdmin}`);
   };
 
   return (

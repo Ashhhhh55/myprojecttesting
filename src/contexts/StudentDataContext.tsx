@@ -34,13 +34,8 @@ const initialStudents: Student[] = [
 export const StudentDataProvider = ({ children }: { children: ReactNode }) => {
   const [students, setStudents] = useState<Student[]>([]);
   const [activityLog, setActivityLog] = useState<string[]>([]);
-  const { currentUser } = useUser();
+  const { currentUser, isAdmin } = useUser();
   
-  // The key issue is here - don't determine isGuest status directly from currentUser
-  // Instead use the admin status from UserContext
-  const { isAdmin } = useUser();
-  const isGuest = !isAdmin;
-
   // Load data on component mount - from Supabase
   useEffect(() => {
     const fetchData = async () => {
@@ -108,8 +103,7 @@ export const StudentDataProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const updateStudentLevel = async (studentId: number, newLevel: number) => {
-    // Don't block admins from modifying data
-    if (isGuest) {
+    if (!isAdmin) {
       toast({
         title: "Access Denied",
         description: "Guest users cannot modify data. Please login as admin.",
@@ -198,7 +192,7 @@ export const StudentDataProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const updateStudentNotes = async (studentId: number, notes: string) => {
-    if (isGuest) {
+    if (!isAdmin) {
       toast({
         title: "Access Denied",
         description: "Guest users cannot modify notes. Please login as admin.",
@@ -247,7 +241,7 @@ export const StudentDataProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const resetAllData = async () => {
-    if (isGuest) {
+    if (!isAdmin) {
       toast({
         title: "Access Denied",
         description: "Guest users cannot reset data. Please login as admin.",

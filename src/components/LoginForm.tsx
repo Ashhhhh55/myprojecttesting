@@ -37,8 +37,10 @@ const LoginForm = ({ setIsLoggedIn }: LoginFormProps) => {
     );
     
     if (user) {
+      // Set as admin user
       setCurrentUser(username);
       localStorage.setItem('isLoggedIn', 'true');
+      localStorage.removeItem('isGuest');
       
       if (rememberMe) {
         localStorage.setItem('rememberedUsername', username);
