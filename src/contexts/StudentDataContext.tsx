@@ -35,7 +35,11 @@ export const StudentDataProvider = ({ children }: { children: ReactNode }) => {
   const [students, setStudents] = useState<Student[]>([]);
   const [activityLog, setActivityLog] = useState<string[]>([]);
   const { currentUser } = useUser();
-  const isGuest = currentUser === 'Guest';
+  
+  // The key issue is here - don't determine isGuest status directly from currentUser
+  // Instead use the admin status from UserContext
+  const { isAdmin } = useUser();
+  const isGuest = !isAdmin;
 
   // Load data on component mount - from Supabase
   useEffect(() => {
@@ -104,6 +108,7 @@ export const StudentDataProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const updateStudentLevel = async (studentId: number, newLevel: number) => {
+    // Don't block admins from modifying data
     if (isGuest) {
       toast({
         title: "Access Denied",

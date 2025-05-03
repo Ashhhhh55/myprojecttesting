@@ -17,9 +17,9 @@ interface DashboardProps {
 
 const Dashboard = ({ setIsLoggedIn }: DashboardProps) => {
   const { students, resetAllData } = useStudentData();
-  const { currentUser } = useUser();
+  const { currentUser, isAdmin } = useUser();
   const [selectedStudent, setSelectedStudent] = useState(students[0]);
-  const isGuest = localStorage.getItem('isGuest') === 'true' || currentUser === 'Guest';
+  const isGuest = !isAdmin;
 
   const handleLogout = () => {
     localStorage.removeItem('isLoggedIn');

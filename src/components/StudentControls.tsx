@@ -13,12 +13,10 @@ const StudentControls = ({ isGuest = false }: StudentControlsProps) => {
   const { students, updateStudentLevel } = useStudentData();
 
   const handleSliderChange = (studentId: number, newValue: number[]) => {
-    if (isGuest) return;
     updateStudentLevel(studentId, newValue[0]);
   };
 
   const handleInputChange = (studentId: number, value: string) => {
-    if (isGuest) return;
     const numValue = parseInt(value, 10);
     if (!isNaN(numValue)) {
       updateStudentLevel(studentId, numValue);

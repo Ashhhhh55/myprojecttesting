@@ -15,13 +15,17 @@ const Index = () => {
   }, []);
   
   return (
-    <div className="min-h-screen bg-gray-50">
-      {isLoggedIn ? (
-        <Dashboard setIsLoggedIn={setIsLoggedIn} />
-      ) : (
-        <LoginForm setIsLoggedIn={setIsLoggedIn} />
-      )}
-    </div>
+    <UserProvider>
+      <StudentDataProvider>
+        <div className="min-h-screen bg-gray-50">
+          {isLoggedIn ? (
+            <Dashboard setIsLoggedIn={setIsLoggedIn} />
+          ) : (
+            <LoginForm setIsLoggedIn={setIsLoggedIn} />
+          )}
+        </div>
+      </StudentDataProvider>
+    </UserProvider>
   );
 };
 
