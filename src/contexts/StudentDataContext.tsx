@@ -46,7 +46,10 @@ export const StudentDataProvider = ({ children }: { children: ReactNode }) => {
           .select('*')
           .order('id');
         
-        if (studentsError) throw studentsError;
+        if (studentsError) {
+          console.error("Supabase students error:", studentsError);
+          throw studentsError;
+        }
         
         // Load activity logs from Supabase
         const { data: logsData, error: logsError } = await supabase
@@ -54,7 +57,10 @@ export const StudentDataProvider = ({ children }: { children: ReactNode }) => {
           .select('*')
           .order('created_at', { ascending: false });
         
-        if (logsError) throw logsError;
+        if (logsError) {
+          console.error("Supabase logs error:", logsError);
+          throw logsError;
+        }
         
         // Format students data to match our interface
         const formattedStudents = studentsData.map(student => ({
@@ -72,7 +78,7 @@ export const StudentDataProvider = ({ children }: { children: ReactNode }) => {
         setStudents(formattedStudents);
         setActivityLog(formattedLogs);
         
-        console.log("Loaded data from Supabase");
+        console.log("Loaded data from Supabase successfully");
       } catch (error) {
         console.error("Error fetching data from Supabase:", error);
         
@@ -129,8 +135,10 @@ export const StudentDataProvider = ({ children }: { children: ReactNode }) => {
         zeroCount += 1;
       }
       
+      console.log(`Updating student ${studentId} to level ${newLevel}`);
+      
       // Update the student in the database
-      const { error: updateError } = await supabase
+      const { data: updateData, error: updateError } = await supabase
         .from('students')
         .update({
           level: newLevel,
@@ -140,18 +148,30 @@ export const StudentDataProvider = ({ children }: { children: ReactNode }) => {
         })
         .eq('id', studentId);
       
-      if (updateError) throw updateError;
+      if (updateError) {
+        console.error("Supabase student update error:", updateError);
+        throw updateError;
+      }
+      
+      console.log("Student update successful:", updateData);
       
       // Log the activity in the database
       const activityMessage = `${new Date().toLocaleString()}: ${currentUser} changed ${student.name}'s level to ${newLevel}`;
       
-      const { error: logError } = await supabase
+      console.log(`Adding activity log: ${activityMessage}`);
+      
+      const { data: logData, error: logError } = await supabase
         .from('activity_logs')
         .insert({
           message: activityMessage,
         });
       
-      if (logError) throw logError;
+      if (logError) {
+        console.error("Supabase activity log error:", logError);
+        throw logError;
+      }
+      
+      console.log("Activity log added successfully:", logData);
       
       // Update the local state
       setStudents(prevStudents => {
@@ -202,8 +222,10 @@ export const StudentDataProvider = ({ children }: { children: ReactNode }) => {
     }
 
     try {
+      console.log(`Updating notes for student ${studentId}`);
+      
       // Update the student notes in the database
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('students')
         .update({
           notes,
@@ -211,7 +233,12 @@ export const StudentDataProvider = ({ children }: { children: ReactNode }) => {
         })
         .eq('id', studentId);
       
-      if (error) throw error;
+      if (error) {
+        console.error("Supabase notes update error:", error);
+        throw error;
+      }
+      
+      console.log("Notes update successful:", data);
       
       // Update the local state
       setStudents(prevStudents => {
@@ -251,13 +278,18 @@ export const StudentDataProvider = ({ children }: { children: ReactNode }) => {
     }
 
     try {
+      console.log("Resetting all data");
+      
       // Reset students table in the database
       const { error: truncateError } = await supabase
         .from('students')
         .delete()
         .not('id', 'is', null);
       
-      if (truncateError) throw truncateError;
+      if (truncateError) {
+        console.error("Error deleting students:", truncateError);
+        throw truncateError;
+      }
       
       // Insert initial data
       const { error: insertError } = await supabase
@@ -273,7 +305,10 @@ export const StudentDataProvider = ({ children }: { children: ReactNode }) => {
           }))
         );
       
-      if (insertError) throw insertError;
+      if (insertError) {
+        console.error("Error inserting student data:", insertError);
+        throw insertError;
+      }
       
       // Reset activity logs
       const { error: logResetError } = await supabase
@@ -281,7 +316,10 @@ export const StudentDataProvider = ({ children }: { children: ReactNode }) => {
         .delete()
         .not('id', 'is', null);
       
-      if (logResetError) throw logResetError;
+      if (logResetError) {
+        console.error("Error deleting logs:", logResetError);
+        throw logResetError;
+      }
       
       // Add reset log
       const resetMessage = `${new Date().toLocaleString()}: ${currentUser} reset all data`;
@@ -292,7 +330,12 @@ export const StudentDataProvider = ({ children }: { children: ReactNode }) => {
           message: resetMessage
         });
       
-      if (logInsertError) throw logInsertError;
+      if (logInsertError) {
+        console.error("Error adding reset log:", logInsertError);
+        throw logInsertError;
+      }
+      
+      console.log("Data reset successful");
       
       // Update local state
       setStudents(initialStudents);
