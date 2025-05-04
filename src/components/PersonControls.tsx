@@ -9,28 +9,16 @@ interface PersonControlsProps {
 }
 
 const PersonControls = ({ isGuest = false }: PersonControlsProps) => {
-  const { persons, updatePersonLevel, addActivityLog } = usePersonData();
+  const { persons, updatePersonLevel } = usePersonData();
 
-  const handleSliderChange = (personId: number, newValue: number[]) => {
-    const newLevel = newValue[0];
-    const person = persons.find(p => p.id === personId);
-    
-    if (person && person.level !== newLevel) {
-      // Update the local state and call database update function
-      updatePersonLevel(personId, newLevel);  // API call to update database
-      addActivityLog(`Malak changed ${person.name}'s level to ${newLevel}`);  // Log change
-    }
+  const handleSliderCommit = (personId: number, newValue: number[]) => {
+    updatePersonLevel(personId, newValue[0]); // Only update when the slider value is committed (after drag ends)
   };
 
   const handleInputChange = (personId: number, value: string) => {
     const numValue = parseInt(value, 10);
     if (!isNaN(numValue)) {
-      const person = persons.find(p => p.id === personId);
-      if (person && person.level !== numValue) {
-        // Update the local state and call database update function
-        updatePersonLevel(personId, numValue);  // API call to update database
-        addActivityLog(`Malak changed ${person.name}'s level to ${numValue}`);  // Log change
-      }
+      updatePersonLevel(personId, numValue);
     }
   };
 
@@ -67,11 +55,11 @@ const PersonControls = ({ isGuest = false }: PersonControlsProps) => {
               
               <Slider
                 id={`slider-${person.id}`}
-                value={[person.level]} // Track the value properly
+                defaultValue={[person.level]}
                 max={10}
                 step={1}
-                onValueChange={(value) => handleSliderChange(person.id, value)} // Handle value change directly
-                onValueCommit={(value) => handleSliderChange(person.id, value)} // Handle when the user commits
+                value={[person.level]}
+                onValueCommit={(value) => handleSliderCommit(person.id, value)} // Trigger only when user releases the slider thumb
                 className={`w-full ${isGuest ? "opacity-70 cursor-not-allowed" : ""}`}
                 disabled={isGuest}
               />
