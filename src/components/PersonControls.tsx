@@ -1,4 +1,3 @@
-
 import { usePersonData } from "@/contexts/PersonDataContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -14,6 +13,10 @@ const PersonControls = ({ isGuest = false }: PersonControlsProps) => {
 
   const handleSliderChange = (personId: number, newValue: number[]) => {
     updatePersonLevel(personId, newValue[0]);
+  };
+
+  const handleSliderCommit = (personId: number, newValue: number[]) => {
+    updatePersonLevel(personId, newValue[0]); // Commit the change on slider release
   };
 
   const handleInputChange = (personId: number, value: string) => {
@@ -60,7 +63,8 @@ const PersonControls = ({ isGuest = false }: PersonControlsProps) => {
                 max={10}
                 step={1}
                 value={[person.level]}
-                onValueChange={(value) => handleSliderChange(person.id, value)}
+                onValueChange={(value) => handleSliderChange(person.id, value)} // Updates while dragging
+                onValueCommit={(value) => handleSliderCommit(person.id, value)} // Commits the value once dragging is done
                 className={`w-full ${isGuest ? "opacity-70 cursor-not-allowed" : ""}`}
                 disabled={isGuest}
               />
