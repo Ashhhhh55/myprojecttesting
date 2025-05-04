@@ -36,7 +36,7 @@ const LineChart = ({ selectedPerson, onPersonChange }: LineChartProps) => {
 
   const chartData =
     selectedPerson?.history.map((value, index) => ({
-      name: ${index + 1},
+      name: `${index + 1}`,
       value: value
     })) || [];
 
