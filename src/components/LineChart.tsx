@@ -10,37 +10,35 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer
-} from 'recharts';
+} from "recharts";
 
 interface LineChartProps {
-  selectedPerson: Person;
+  selectedPerson: Person | null;
   onPersonChange: (person: Person) => void;
 }
 
 const LineChart = ({ selectedPerson, onPersonChange }: LineChartProps) => {
   const { persons } = usePersonData();
 
-  // Set default person if none selected
+  // Ensure selectedPerson is always valid
   useEffect(() => {
-    if (
-      (!selectedPerson || !persons.find(p => p.id === selectedPerson.id)) &&
-      persons.length > 0
-    ) {
+    if (!selectedPerson && persons.length > 0) {
       onPersonChange(persons[0]);
     }
-  }, [selectedPerson?.id, persons]);
+  }, [selectedPerson, persons, onPersonChange]);
 
   const handlePersonChange = (value: string) => {
-    const person = persons.find(p => p.id.toString() === value);
-    if (person && person.id !== selectedPerson?.id) {
-      onPersonChange(person);
+    const newPerson = persons.find((p) => p.id.toString() === value);
+    if (newPerson && newPerson.id !== selectedPerson?.id) {
+      onPersonChange(newPerson); // Only call if person actually changed
     }
   };
 
-  const chartData = selectedPerson?.history.map((value, index) => ({
-    name: `${index + 1}`,
-    value: value
-  })) || [];
+  const chartData =
+    selectedPerson?.history.map((value, index) => ({
+      name: `${index + 1}`,
+      value: value
+    })) || [];
 
   if (!selectedPerson) return null;
 
