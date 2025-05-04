@@ -29,8 +29,8 @@ const LineChart = ({ selectedPerson, onPersonChange }: LineChartProps) => {
 
   const handlePersonChange = (value: string) => {
     const newPerson = persons.find((p) => p.id.toString() === value);
-    if (newPerson && newPerson.id !== selectedPerson?.id) {
-      onPersonChange(newPerson); // Only call if person actually changed
+    if (newPerson && newPerson.id !== selectedPerson?.id && newPerson.level !== selectedPerson?.level) {
+      onPersonChange(newPerson); // Only call if person actually changed and level is different
     }
   };
 
