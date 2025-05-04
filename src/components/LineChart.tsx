@@ -1,9 +1,16 @@
-
 import { useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { usePersonData, Person } from "@/contexts/PersonDataContext";
-import { LineChart as RechartsLineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import {
+  LineChart as RechartsLineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer
+} from 'recharts';
 
 interface LineChartProps {
   selectedPerson: Person;
@@ -12,22 +19,24 @@ interface LineChartProps {
 
 const LineChart = ({ selectedPerson, onPersonChange }: LineChartProps) => {
   const { persons } = usePersonData();
-  
-  // Find selected person if it doesn't exist
+
+  // Set default person if none selected
   useEffect(() => {
-    if (!selectedPerson && persons.length > 0) {
+    if (
+      (!selectedPerson || !persons.find(p => p.id === selectedPerson.id)) &&
+      persons.length > 0
+    ) {
       onPersonChange(persons[0]);
     }
-  }, [selectedPerson, persons, onPersonChange]);
+  }, [selectedPerson?.id, persons]);
 
   const handlePersonChange = (value: string) => {
-    const person = persons.find(s => s.id.toString() === value);
-    if (person) {
+    const person = persons.find(p => p.id.toString() === value);
+    if (person && person.id !== selectedPerson?.id) {
       onPersonChange(person);
     }
   };
 
-  // Convert history data to format expected by Recharts
   const chartData = selectedPerson?.history.map((value, index) => ({
     name: `${index + 1}`,
     value: value
@@ -39,8 +48,8 @@ const LineChart = ({ selectedPerson, onPersonChange }: LineChartProps) => {
     <Card>
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <CardTitle className="text-lg md:text-xl">Line Graph</CardTitle>
-        <Select 
-          value={selectedPerson.id.toString()} 
+        <Select
+          value={selectedPerson.id.toString()}
           onValueChange={handlePersonChange}
         >
           <SelectTrigger className="w-[180px]">
@@ -58,7 +67,7 @@ const LineChart = ({ selectedPerson, onPersonChange }: LineChartProps) => {
       <CardContent className="pt-0">
         <div className="h-64">
           <ResponsiveContainer width="100%" height="100%">
-            <RechartsLineChart 
+            <RechartsLineChart
               data={chartData}
               margin={{ top: 5, right: 20, left: 0, bottom: 5 }}
             >
@@ -66,11 +75,11 @@ const LineChart = ({ selectedPerson, onPersonChange }: LineChartProps) => {
               <XAxis dataKey="name" />
               <YAxis domain={[0, 10]} ticks={[0, 2, 4, 6, 8, 10]} />
               <Tooltip />
-              <Line 
-                type="monotone" 
-                dataKey="value" 
+              <Line
+                type="monotone"
+                dataKey="value"
                 name={selectedPerson.name}
-                stroke="#3b82f6" 
+                stroke="#3b82f6"
                 strokeWidth={2}
                 activeDot={{ r: 6 }}
                 dot={{ r: 4 }}
