@@ -5,12 +5,6 @@ import { useEffect, useState } from "react";
 
 const BarChart = () => {
   const { persons } = usePersonData();
-  const [animatedPersons, setAnimatedPersons] = useState(persons);
-  
-  // Update animated persons when persons data changes
-  useEffect(() => {
-    setAnimatedPersons(persons);
-  }, [persons]);
   
   // Function to determine bar color based on level
   const getBarColor = (level: number) => {
@@ -18,6 +12,9 @@ const BarChart = () => {
     if (level === 10) return "bg-green-500"; // Max level (green)
     return "bg-blue-500"; // Normal level (blue)
   };
+
+  // Console log for debugging
+  console.log("BarChart rendering with persons:", persons);
 
   return (
     <Card>
@@ -37,7 +34,7 @@ const BarChart = () => {
           
           {/* Chart area */}
           <div className="absolute left-10 right-0 top-0 bottom-0 flex items-end justify-around">
-            {animatedPersons.map((person) => (
+            {persons.map((person) => (
               <div key={person.id} className="flex flex-col items-center w-1/6">
                 <div className="w-full flex-1 flex items-end justify-center pb-6">
                   <div 
