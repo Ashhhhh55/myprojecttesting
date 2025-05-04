@@ -1,50 +1,121 @@
-import { useState } from "react";
-import NetlifyDeployButton from "./NetlifyDeployButton";
 
-const Header = ({ 
-  onLogout, 
-  onReset, 
-  isGuest 
-}: { 
-  onLogout: () => void, 
-  onReset: () => void,
-  isGuest: boolean 
-}) => {
-  
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { useUser } from "@/contexts/UserContext";
+
+interface HeaderProps {
+  onLogout: () => void;
+  onReset: () => void;
+  isGuest: boolean;
+}
+
+const Header = ({ onLogout, onReset, isGuest }: HeaderProps) => {
+  const { currentUser } = useUser();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
   return (
-    <header className="bg-white border-b border-gray-200 shadow-sm">
-      <div className="container py-4 flex justify-between items-center">
-        <div className="flex items-center space-x-2">
-          <h1 className="text-2xl font-bold tracking-tight arabic-text rtl">
-            لوحة متابعة الطلاب
-          </h1>
-          {isGuest && (
-            <span className="bg-amber-100 text-amber-700 text-xs px-2 py-1 rounded-md">
-              Guest Mode
-            </span>
-          )}
+    <header className="bg-white shadow-sm sticky top-0 z-10">
+      <div className="container flex justify-between items-center py-4">
+        <div className="flex items-center">
+          <h1 className="text-2xl font-bold arabic-text">ألجراف</h1>
         </div>
         
-        <div className="flex items-center space-x-4">
+        {/* Desktop navigation */}
+        <div className="hidden md:flex items-center gap-4">
+          <div className="text-sm text-muted-foreground">
+            {isGuest ? (
+              <span className="text-amber-500">مرحباً, Guest (View Only)</span>
+            ) : (
+              <span>مرحباً, {currentUser}</span>
+            )}
+          </div>
+          
           {!isGuest && (
-            <button
-              className="text-red-500 text-sm hover:underline"
-              onClick={onReset}
-            >
-              Reset Data
-            </button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="outline" size="sm">
+                  Reset Data
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This will reset all student data to default values. This action cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={onReset}>Reset</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           )}
           
-          <NetlifyDeployButton />
-          
-          <button
-            className="bg-gray-100 hover:bg-gray-200 text-gray-800 px-3 py-1 rounded-md text-sm transition-colors"
-            onClick={onLogout}
+          <Button onClick={onLogout} size="sm">
+            {isGuest ? "Exit" : "Logout"}
+          </Button>
+        </div>
+        
+        {/* Mobile menu button */}
+        <div className="md:hidden">
+          <Button 
+            variant="ghost" 
+            size="icon"
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           >
-            Logout
-          </button>
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-menu">
+              <line x1="4" x2="20" y1="12" y2="12"></line>
+              <line x1="4" x2="20" y1="6" y2="6"></line>
+              <line x1="4" x2="20" y1="18" y2="18"></line>
+            </svg>
+          </Button>
         </div>
       </div>
+
+      {/* Mobile menu */}
+      {isMobileMenuOpen && (
+        <div className="md:hidden bg-white border-t p-4">
+          <div className="space-y-4">
+            <div className="text-sm text-muted-foreground text-center">
+              {isGuest ? (
+                <span className="text-amber-500">مرحباً, Guest (View Only)</span>
+              ) : (
+                <span>مرحباً, {currentUser}</span>
+              )}
+            </div>
+            
+            <div className="flex flex-col gap-2">
+              {!isGuest && (
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="outline" className="w-full">
+                      Reset Data
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This will reset all student data to default values. This action cannot be undone.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={onReset}>Reset</AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              )}
+              
+              <Button onClick={onLogout} className="w-full">
+                {isGuest ? "Exit" : "Logout"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </header>
   );
 };
