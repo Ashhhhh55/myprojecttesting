@@ -34,19 +34,25 @@ const BarChart = () => {
           
           {/* Chart area */}
           <div className="absolute left-10 right-0 top-0 bottom-0 flex items-end justify-around">
-            {persons.map((person) => (
+            {persons.length > 0 ? persons.map((person) => (
               <div key={person.id} className="flex flex-col items-center w-1/6">
                 <div className="w-full flex-1 flex items-end justify-center pb-6">
                   <div 
-                    className={`w-8 ${getBarColor(person.level)} rounded-t-sm transition-all duration-500 ease-in-out`}
+                    className={`w-8 ${getBarColor(person.level)} rounded-t-sm`}
                     style={{ 
                       height: `${(person.level / 10) * 100}%`,
+                      minHeight: '4px', // Ensure bars are visible even at level 0
+                      transition: 'height 0.5s ease-in-out'
                     }}
                   ></div>
                 </div>
                 <span className="text-xs font-medium arabic-text">{person.name}</span>
               </div>
-            ))}
+            )) : (
+              <div className="w-full h-full flex items-center justify-center">
+                <p className="text-gray-400">No data available</p>
+              </div>
+            )}
           </div>
         </div>
       </CardContent>
