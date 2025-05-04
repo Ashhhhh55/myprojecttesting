@@ -2,10 +2,10 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useStudentData } from "@/contexts/StudentDataContext";
+import { usePersonData } from "@/contexts/PersonDataContext";
 
 const ActivityLog = () => {
-  const { activityLog } = useStudentData();
+  const { activityLog } = usePersonData();
   const [displayCount, setDisplayCount] = useState(5);
   
   const loadMore = () => {
