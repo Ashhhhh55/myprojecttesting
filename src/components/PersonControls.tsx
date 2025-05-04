@@ -9,28 +9,16 @@ interface PersonControlsProps {
 }
 
 const PersonControls = ({ isGuest = false }: PersonControlsProps) => {
-  const { persons, updatePersonLevel, addActivityLog } = usePersonData();
+  const { persons, updatePersonLevel } = usePersonData();
 
   const handleSliderCommit = (personId: number, newValue: number[]) => {
-    const newLevel = newValue[0];
-    const person = persons.find(p => p.id === personId);
-
-    // Only update and log if the level has actually changed
-    if (person && person.level !== newLevel) {
-      updatePersonLevel(personId, newLevel);
-      // Log the activity only if the level has changed
-      addActivityLog(`Malak changed ${person.name}'s level to ${newLevel}`);
-    }
+    updatePersonLevel(personId, newValue[0]); // Only update when the slider value is committed (after drag ends)
   };
 
   const handleInputChange = (personId: number, value: string) => {
     const numValue = parseInt(value, 10);
     if (!isNaN(numValue)) {
-      const person = persons.find(p => p.id === personId);
-      if (person && person.level !== numValue) {
-        updatePersonLevel(personId, numValue);
-        addActivityLog(`Malak changed ${person.name}'s level to ${numValue}`);
-      }
+      updatePersonLevel(personId, numValue);
     }
   };
 
@@ -71,7 +59,7 @@ const PersonControls = ({ isGuest = false }: PersonControlsProps) => {
                 max={10}
                 step={1}
                 value={[person.level]}
-                onValueCommit={(value) => handleSliderCommit(person.id, value)} // Trigger only when the user commits to a value
+                onValueCommit={(value) => handleSliderCommit(person.id, value)} // Trigger only when user releases the slider thumb
                 className={`w-full ${isGuest ? "opacity-70 cursor-not-allowed" : ""}`}
                 disabled={isGuest}
               />
