@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { usePersonData, Person } from "@/contexts/PersonDataContext";
@@ -8,6 +8,19 @@ interface LineChartProps {
   selectedPerson: Person | null; // Allow null for initial state
   onPersonChange: (person: Person) => void;
 }
+
+// Simple debounce function
+const debounce = (func: Function, delay: number) => {
+  let timeoutId: NodeJS.Timeout;
+  return (...args: any[]) => {
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
+    timeoutId = setTimeout(() => {
+      func(...args);
+    }, delay);
+  };
+};
 
 const LineChart = ({ selectedPerson, onPersonChange }: LineChartProps) => {
   const { persons } = usePersonData();
@@ -19,7 +32,7 @@ const LineChart = ({ selectedPerson, onPersonChange }: LineChartProps) => {
     }
   }, [selectedPerson, persons, onPersonChange]);
 
-  const handlePersonChange = (value: string) => {
+  const handlePersonChange = useCallback(debounce((value: string) => {
     const newPerson = persons.find((p) => p.id.toString() === value);
     if (newPerson) {
       // Check if the new person's level is different from the selected person's level
@@ -27,7 +40,7 @@ const LineChart = ({ selectedPerson, onPersonChange }: LineChartProps) => {
         onPersonChange(newPerson); // Only call if person actually changed and level is different
       }
     }
-  };
+  }, 300), [persons, selectedPerson, onPersonChange]); // Adjust the delay as needed
 
   // Convert history data to format expected by Recharts
   const chartData =
