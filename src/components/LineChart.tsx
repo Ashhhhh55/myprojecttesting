@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { usePersonData, Person } from "@/contexts/PersonDataContext";
@@ -19,17 +19,12 @@ interface LineChartProps {
 
 const LineChart = ({ selectedPerson, onPersonChange }: LineChartProps) => {
   const { persons } = usePersonData();
-  const [scrollValues, setScrollValues] = useState<{ [key: string]: number }>({});
 
   // Ensure selectedPerson is always valid
   useEffect(() => {
     if (!selectedPerson && persons.length > 0) {
       onPersonChange(persons[0]);
     }
-
-    // Initialize scroll values from localStorage or default to 0
-    const storedScrollValues = JSON.parse(localStorage.getItem('scrollValues') || '{}');
-    setScrollValues(storedScrollValues);
   }, [selectedPerson, persons, onPersonChange]);
 
   const handlePersonChange = (value: string) => {
@@ -39,20 +34,9 @@ const LineChart = ({ selectedPerson, onPersonChange }: LineChartProps) => {
     }
   };
 
-  const handleScrollChange = (personId: string, value: number) => {
-    setScrollValues(prev => {
-      const updatedScrollValues = { ...prev, [personId]: value };
-      // Save the updated value in localStorage
-      localStorage.setItem('scrollValues', JSON.stringify(updatedScrollValues));
-      return updatedScrollValues;
-    });
-
-    // Optionally, you could update the chart or other parts of the UI based on the new value
-  };
-
   const chartData =
     selectedPerson?.history.map((value, index) => ({
-      name: `${index + 1}`,
+      name: ${index + 1},
       value: value
     })) || [];
 
@@ -100,22 +84,6 @@ const LineChart = ({ selectedPerson, onPersonChange }: LineChartProps) => {
               />
             </RechartsLineChart>
           </ResponsiveContainer>
-        </div>
-        <div className="scrollbars mt-4">
-          {persons.map((person) => (
-            <div key={person.id} className="flex items-center mb-4">
-              <span className="mr-2">{person.name} Level:</span>
-              <input
-                type="range"
-                min="0"
-                max="10"
-                value={scrollValues[person.id.toString()] || 0}
-                onChange={(e) => handleScrollChange(person.id.toString(), Number(e.target.value))}
-                className="w-full"
-              />
-              <span className="ml-2">{scrollValues[person.id.toString()] || 0}</span>
-            </div>
-          ))}
         </div>
       </CardContent>
     </Card>
