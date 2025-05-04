@@ -9,16 +9,45 @@ interface PersonControlsProps {
 }
 
 const PersonControls = ({ isGuest = false }: PersonControlsProps) => {
-  const { persons, updatePersonLevel } = usePersonData();
+  const { persons, updatePersonLevel, addActivityLog } = usePersonData();
 
-  const handleSliderCommit = (personId: number, newValue: number[]) => {
-    updatePersonLevel(personId, newValue[0]); // Only update when the slider value is committed (after drag ends)
+  // Store previous level to prevent redundant logs
+  const previousLevels: { [key: number]: number } = {};
+
+  const handleSliderChange = (personId: number, newValue: number[]) => {
+    const newLevel = newValue[0];
+
+    // Check if the level has changed
+    const person = persons.find(p => p.id === personId);
+    if (person && person.level !== newLevel) {
+      // If it's a new level, update and log
+      if (previousLevels[personId] !== newLevel) {
+        // Update the local level state
+        updatePersonLevel(personId, newLevel);
+
+        // Add activity log for this change
+        addActivityLog(`Malak changed ${person.name}'s level to ${newLevel}`);
+
+        // Store the previous level to prevent redundant logs
+        previousLevels[personId] = newLevel;
+      }
+    }
   };
 
   const handleInputChange = (personId: number, value: string) => {
     const numValue = parseInt(value, 10);
     if (!isNaN(numValue)) {
-      updatePersonLevel(personId, numValue);
+      const person = persons.find(p => p.id === personId);
+      if (person && person.level !== numValue) {
+        // Update the level if changed
+        updatePersonLevel(personId, numValue);
+
+        // Log the activity change
+        addActivityLog(`Malak changed ${person.name}'s level to ${numValue}`);
+
+        // Store the previous level to prevent redundant logs
+        previousLevels[personId] = numValue;
+      }
     }
   };
 
@@ -55,11 +84,11 @@ const PersonControls = ({ isGuest = false }: PersonControlsProps) => {
               
               <Slider
                 id={`slider-${person.id}`}
-                defaultValue={[person.level]}
+                value={[person.level]} // Track the value properly
                 max={10}
                 step={1}
-                value={[person.level]}
-                onValueCommit={(value) => handleSliderCommit(person.id, value)} // Trigger only when user releases the slider thumb
+                onValueChange={(value) => handleSliderChange(person.id, value)} // Handle value change directly
+                onValueCommit={(value) => handleSliderChange(person.id, value)} // Handle when the user commits
                 className={`w-full ${isGuest ? "opacity-70 cursor-not-allowed" : ""}`}
                 disabled={isGuest}
               />
