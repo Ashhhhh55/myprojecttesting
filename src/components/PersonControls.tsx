@@ -11,12 +11,8 @@ interface PersonControlsProps {
 const PersonControls = ({ isGuest = false }: PersonControlsProps) => {
   const { persons, updatePersonLevel } = usePersonData();
 
-  const handleSliderChange = (personId: number, newValue: number[]) => {
-    updatePersonLevel(personId, newValue[0]);
-  };
-
   const handleSliderCommit = (personId: number, newValue: number[]) => {
-    updatePersonLevel(personId, newValue[0]); // Commit the change on slider release
+    updatePersonLevel(personId, newValue[0]); // Only update when the slider value is committed (after drag ends)
   };
 
   const handleInputChange = (personId: number, value: string) => {
@@ -63,8 +59,7 @@ const PersonControls = ({ isGuest = false }: PersonControlsProps) => {
                 max={10}
                 step={1}
                 value={[person.level]}
-                onValueChange={(value) => handleSliderChange(person.id, value)} // Updates while dragging
-                onValueCommit={(value) => handleSliderCommit(person.id, value)} // Commits the value once dragging is done
+                onValueCommit={(value) => handleSliderCommit(person.id, value)} // Trigger only when user releases the slider thumb
                 className={`w-full ${isGuest ? "opacity-70 cursor-not-allowed" : ""}`}
                 disabled={isGuest}
               />
