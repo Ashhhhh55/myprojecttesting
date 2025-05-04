@@ -3,30 +3,30 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { useStudentData } from "@/contexts/StudentDataContext";
+import { usePersonData } from "@/contexts/PersonDataContext";
 
 interface NotesSectionProps {
   isGuest?: boolean;
 }
 
 const NotesSection = ({ isGuest = false }: NotesSectionProps) => {
-  const { students, updateStudentNotes } = useStudentData();
-  const [selectedStudentId, setSelectedStudentId] = useState(students[0]?.id.toString() || "1");
+  const { persons, updatePersonNotes } = usePersonData();
+  const [selectedPersonId, setSelectedPersonId] = useState(persons[0]?.id.toString() || "1");
   const [notes, setNotes] = useState('');
 
-  // Update notes when selected student changes
+  // Update notes when selected person changes
   useEffect(() => {
-    const student = students.find(s => s.id.toString() === selectedStudentId);
-    if (student) {
-      setNotes(student.notes);
+    const person = persons.find(s => s.id.toString() === selectedPersonId);
+    if (person) {
+      setNotes(person.notes);
     }
-  }, [selectedStudentId, students]);
+  }, [selectedPersonId, persons]);
 
   // Handle notes change
   const handleNotesChange = (value: string) => {
     if (isGuest) return;
     setNotes(value);
-    updateStudentNotes(parseInt(selectedStudentId, 10), value);
+    updatePersonNotes(parseInt(selectedPersonId, 10), value);
   };
 
   return (
@@ -40,23 +40,23 @@ const NotesSection = ({ isGuest = false }: NotesSectionProps) => {
       <CardContent>
         <div className="space-y-4">
           <Select 
-            value={selectedStudentId} 
-            onValueChange={setSelectedStudentId}
+            value={selectedPersonId} 
+            onValueChange={setSelectedPersonId}
           >
             <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select student" />
+              <SelectValue placeholder="Select person" />
             </SelectTrigger>
             <SelectContent>
-              {students.map((student) => (
-                <SelectItem key={student.id} value={student.id.toString()}>
-                  <span className="arabic-text">{student.name}</span>
+              {persons.map((person) => (
+                <SelectItem key={person.id} value={person.id.toString()}>
+                  <span className="arabic-text">{person.name}</span>
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
           
           <Textarea 
-            placeholder={isGuest ? "Notes are view-only in guest mode" : "Add notes for this student..."}
+            placeholder={isGuest ? "Notes are view-only in guest mode" : "Add notes for this person..."}
             className="min-h-[120px]"
             value={notes}
             onChange={(e) => handleNotesChange(e.target.value)}

@@ -1,9 +1,9 @@
 
-import { useStudentData } from "@/contexts/StudentDataContext";
+import { usePersonData } from "@/contexts/PersonDataContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const BarChart = () => {
-  const { students } = useStudentData();
+  const { persons } = usePersonData();
   
   // Function to determine bar color based on level
   const getBarColor = (level: number) => {
@@ -30,17 +30,17 @@ const BarChart = () => {
           
           {/* Chart area */}
           <div className="absolute left-10 right-0 top-0 bottom-0 flex items-end justify-around">
-            {students.map((student) => (
-              <div key={student.id} className="flex flex-col items-center w-1/6">
+            {persons.map((person) => (
+              <div key={person.id} className="flex flex-col items-center w-1/6">
                 <div className="w-full flex-1 flex items-end justify-center pb-6">
                   <div 
-                    className={`w-8 ${getBarColor(student.level)} rounded-t-sm animate-bar-rise`}
+                    className={`w-8 ${getBarColor(person.level)} rounded-t-sm animate-bar-rise`}
                     style={{ 
-                      '--bar-height': `${(student.level / 10) * 100}%`,
+                      '--bar-height': `${(person.level / 10) * 100}%`,
                     } as React.CSSProperties}
                   ></div>
                 </div>
-                <span className="text-xs font-medium arabic-text">{student.name}</span>
+                <span className="text-xs font-medium arabic-text">{person.name}</span>
               </div>
             ))}
           </div>

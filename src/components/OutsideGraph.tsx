@@ -1,12 +1,12 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useStudentData } from "@/contexts/StudentDataContext";
+import { usePersonData } from "@/contexts/PersonDataContext";
 
 const OutsideGraph = () => {
-  const { students } = useStudentData();
+  const { persons } = usePersonData();
   
-  // Get students with level 0
-  const zeroLevelStudents = students.filter(student => student.level === 0);
+  // Get persons with level 0
+  const zeroLevelPersons = persons.filter(person => person.level === 0);
 
   return (
     <Card>
@@ -14,17 +14,17 @@ const OutsideGraph = () => {
         <CardTitle className="text-lg md:text-xl arabic-text rtl">برا الجراف</CardTitle>
       </CardHeader>
       <CardContent>
-        {zeroLevelStudents.length === 0 ? (
+        {zeroLevelPersons.length === 0 ? (
           <p className="text-muted-foreground text-center py-6">
-            No students outside graph
+            No persons outside graph
           </p>
         ) : (
           <ul className="divide-y">
-            {zeroLevelStudents.map(student => (
-              <li key={student.id} className="py-2 flex justify-between">
-                <span className="arabic-text rtl">{student.name}</span>
+            {zeroLevelPersons.map(person => (
+              <li key={person.id} className="py-2 flex justify-between">
+                <span className="arabic-text rtl">{person.name}</span>
                 <span className="font-medium">
-                  {student.zeroCount} {student.zeroCount === 1 ? 'time' : 'times'}
+                  {person.zeroCount} {person.zeroCount === 1 ? 'time' : 'times'}
                 </span>
               </li>
             ))}

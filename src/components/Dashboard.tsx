@@ -1,14 +1,14 @@
 
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import StudentControls from "./StudentControls";
+import PersonControls from "./PersonControls";
 import BarChart from "./BarChart";
 import LineChart from "./LineChart";
 import ActivityLog from "./ActivityLog";
 import OutsideGraph from "./OutsideGraph";
 import NotesSection from "./NotesSection";
 import Header from "./Header";
-import { useStudentData } from "@/contexts/StudentDataContext";
+import { usePersonData } from "@/contexts/PersonDataContext";
 import { useUser } from "@/contexts/UserContext";
 
 interface DashboardProps {
@@ -16,9 +16,9 @@ interface DashboardProps {
 }
 
 const Dashboard = ({ setIsLoggedIn }: DashboardProps) => {
-  const { students, resetAllData } = useStudentData();
+  const { persons, resetAllData } = usePersonData();
   const { currentUser, isAdmin } = useUser();
-  const [selectedStudent, setSelectedStudent] = useState(students[0]);
+  const [selectedPerson, setSelectedPerson] = useState(persons[0]);
   const isGuest = !isAdmin;
 
   const handleLogout = () => {
@@ -27,12 +27,12 @@ const Dashboard = ({ setIsLoggedIn }: DashboardProps) => {
     setIsLoggedIn(false);
   };
 
-  // Update selectedStudent when students are loaded
-  if (selectedStudent === undefined && students.length > 0) {
-    setSelectedStudent(students[0]);
+  // Update selectedPerson when persons are loaded
+  if (selectedPerson === undefined && persons.length > 0) {
+    setSelectedPerson(persons[0]);
   }
 
-  if (students.length === 0) {
+  if (persons.length === 0) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -63,14 +63,14 @@ const Dashboard = ({ setIsLoggedIn }: DashboardProps) => {
               </TabsList>
               
               <TabsContent value="controls" className="space-y-4">
-                <StudentControls isGuest={isGuest} />
+                <PersonControls isGuest={isGuest} />
               </TabsContent>
               
               <TabsContent value="charts" className="space-y-4">
                 <BarChart />
                 <LineChart 
-                  selectedStudent={selectedStudent} 
-                  onStudentChange={setSelectedStudent}
+                  selectedPerson={selectedPerson} 
+                  onPersonChange={setSelectedPerson}
                 />
                 <OutsideGraph />
               </TabsContent>
@@ -86,7 +86,7 @@ const Dashboard = ({ setIsLoggedIn }: DashboardProps) => {
           <div className="hidden md:grid md:grid-cols-12 gap-6">
             {/* Controls Section */}
             <div className="col-span-4">
-              <StudentControls isGuest={isGuest} />
+              <PersonControls isGuest={isGuest} />
             </div>
             
             {/* Charts and Activity Section */}
@@ -94,8 +94,8 @@ const Dashboard = ({ setIsLoggedIn }: DashboardProps) => {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <BarChart />
                 <LineChart 
-                  selectedStudent={selectedStudent} 
-                  onStudentChange={setSelectedStudent}
+                  selectedPerson={selectedPerson} 
+                  onPersonChange={setSelectedPerson}
                 />
               </div>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

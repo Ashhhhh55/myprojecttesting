@@ -4,7 +4,7 @@ import { toast } from '@/components/ui/use-toast';
 import { useUser } from './UserContext';
 import { supabase } from '@/integrations/supabase/client';
 
-export interface Student {
+export interface Person {
   id: number;
   name: string;
   level: number;
@@ -13,17 +13,17 @@ export interface Student {
   zeroCount: number;
 }
 
-interface StudentDataContextType {
-  students: Student[];
-  updateStudentLevel: (studentId: number, newLevel: number) => void;
-  updateStudentNotes: (studentId: number, notes: string) => void;
+interface PersonDataContextType {
+  persons: Person[];
+  updatePersonLevel: (personId: number, newLevel: number) => void;
+  updatePersonNotes: (personId: number, notes: string) => void;
   resetAllData: () => void;
   activityLog: string[];
 }
 
-const StudentDataContext = createContext<StudentDataContextType | undefined>(undefined);
+const PersonDataContext = createContext<PersonDataContextType | undefined>(undefined);
 
-const initialStudents: Student[] = [
+const initialPersons: Person[] = [
   { id: 1, name: 'يوسف', level: 5, history: [5], notes: '', zeroCount: 0 },
   { id: 2, name: 'نور', level: 4, history: [4], notes: '', zeroCount: 0 },
   { id: 3, name: 'علي', level: 3, history: [3], notes: '', zeroCount: 0 },
@@ -31,8 +31,8 @@ const initialStudents: Student[] = [
   { id: 5, name: 'كريم', level: 1, history: [1], notes: '', zeroCount: 0 },
 ];
 
-export const StudentDataProvider = ({ children }: { children: ReactNode }) => {
-  const [students, setStudents] = useState<Student[]>([]);
+export const PersonDataProvider = ({ children }: { children: ReactNode }) => {
+  const [persons, setPersons] = useState<Person[]>([]);
   const [activityLog, setActivityLog] = useState<string[]>([]);
   const { currentUser, isAdmin } = useUser();
   
@@ -40,15 +40,15 @@ export const StudentDataProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Load students from Supabase
-        const { data: studentsData, error: studentsError } = await supabase
+        // Load persons from Supabase
+        const { data: personsData, error: personsError } = await supabase
           .from('students')
           .select('*')
           .order('id');
         
-        if (studentsError) {
-          console.error("Supabase students error:", studentsError);
-          throw studentsError;
+        if (personsError) {
+          console.error("Supabase persons error:", personsError);
+          throw personsError;
         }
         
         // Load activity logs from Supabase
@@ -62,20 +62,20 @@ export const StudentDataProvider = ({ children }: { children: ReactNode }) => {
           throw logsError;
         }
         
-        // Format students data to match our interface
-        const formattedStudents = studentsData.map(student => ({
-          id: student.id,
-          name: student.name,
-          level: student.level,
-          history: student.history,
-          notes: student.notes,
-          zeroCount: student.zero_count
+        // Format persons data to match our interface
+        const formattedPersons = personsData.map(person => ({
+          id: person.id,
+          name: person.name,
+          level: person.level,
+          history: person.history,
+          notes: person.notes,
+          zeroCount: person.zero_count
         }));
         
         // Format logs data to match our interface
         const formattedLogs = logsData.map(log => log.message);
         
-        setStudents(formattedStudents);
+        setPersons(formattedPersons);
         setActivityLog(formattedLogs);
         
         console.log("Loaded data from Supabase successfully");
@@ -83,14 +83,14 @@ export const StudentDataProvider = ({ children }: { children: ReactNode }) => {
         console.error("Error fetching data from Supabase:", error);
         
         // Fallback to localStorage if Supabase fails
-        const savedStudents = localStorage.getItem('students');
+        const savedPersons = localStorage.getItem('students');
         const savedActivityLog = localStorage.getItem('activityLog');
         
-        if (savedStudents) {
-          setStudents(JSON.parse(savedStudents));
+        if (savedPersons) {
+          setPersons(JSON.parse(savedPersons));
         } else {
-          setStudents(initialStudents);
-          localStorage.setItem('students', JSON.stringify(initialStudents));
+          setPersons(initialPersons);
+          localStorage.setItem('students', JSON.stringify(initialPersons));
         }
         
         if (savedActivityLog) {
@@ -108,7 +108,7 @@ export const StudentDataProvider = ({ children }: { children: ReactNode }) => {
     fetchData();
   }, []);
 
-  const updateStudentLevel = async (studentId: number, newLevel: number) => {
+  const updatePersonLevel = async (personId: number, newLevel: number) => {
     if (!isAdmin) {
       toast({
         title: "Access Denied",
@@ -122,41 +122,41 @@ export const StudentDataProvider = ({ children }: { children: ReactNode }) => {
     if (newLevel > 10) newLevel = 10;
 
     try {
-      // Find the student to update
-      const student = students.find(s => s.id === studentId);
-      if (!student) return;
+      // Find the person to update
+      const person = persons.find(s => s.id === personId);
+      if (!person) return;
 
-      const wasZero = student.level === 0;
+      const wasZero = person.level === 0;
       const isZero = newLevel === 0;
       
       // Update zero count if needed
-      let zeroCount = student.zeroCount;
+      let zeroCount = person.zeroCount;
       if (isZero && !wasZero) {
         zeroCount += 1;
       }
       
-      console.log(`Updating student ${studentId} to level ${newLevel}`);
+      console.log(`Updating person ${personId} to level ${newLevel}`);
       
-      // Update the student in the database
+      // Update the person in the database
       const { data: updateData, error: updateError } = await supabase
         .from('students')
         .update({
           level: newLevel,
-          history: [...student.history, newLevel],
+          history: [...person.history, newLevel],
           zero_count: zeroCount,
           updated_at: new Date().toISOString()
         })
-        .eq('id', studentId);
+        .eq('id', personId);
       
       if (updateError) {
-        console.error("Supabase student update error:", updateError);
+        console.error("Supabase person update error:", updateError);
         throw updateError;
       }
       
-      console.log("Student update successful:", updateData);
+      console.log("Person update successful:", updateData);
       
       // Log the activity in the database
-      const activityMessage = `${new Date().toLocaleString()}: ${currentUser} changed ${student.name}'s level to ${newLevel}`;
+      const activityMessage = `${new Date().toLocaleString()}: ${currentUser} changed ${person.name}'s level to ${newLevel}`;
       
       console.log(`Adding activity log: ${activityMessage}`);
       
@@ -174,9 +174,9 @@ export const StudentDataProvider = ({ children }: { children: ReactNode }) => {
       console.log("Activity log added successfully:", logData);
       
       // Update the local state
-      setStudents(prevStudents => {
-        const updatedStudents = prevStudents.map(s => {
-          if (s.id === studentId) {
+      setPersons(prevPersons => {
+        const updatedPersons = prevPersons.map(s => {
+          if (s.id === personId) {
             return {
               ...s,
               level: newLevel,
@@ -187,8 +187,8 @@ export const StudentDataProvider = ({ children }: { children: ReactNode }) => {
           return s;
         });
         
-        localStorage.setItem('students', JSON.stringify(updatedStudents));
-        return updatedStudents;
+        localStorage.setItem('students', JSON.stringify(updatedPersons));
+        return updatedPersons;
       });
       
       setActivityLog(prev => {
@@ -199,19 +199,19 @@ export const StudentDataProvider = ({ children }: { children: ReactNode }) => {
       
       toast({
         title: "Level Updated",
-        description: `${student.name}'s level is now ${newLevel}`,
+        description: `${person.name}'s level is now ${newLevel}`,
       });
     } catch (error) {
-      console.error("Error updating student level:", error);
+      console.error("Error updating person level:", error);
       toast({
         title: "Update Failed",
-        description: "Could not update the student level. Please try again.",
+        description: "Could not update the person level. Please try again.",
         variant: "destructive"
       });
     }
   };
 
-  const updateStudentNotes = async (studentId: number, notes: string) => {
+  const updatePersonNotes = async (personId: number, notes: string) => {
     if (!isAdmin) {
       toast({
         title: "Access Denied",
@@ -222,16 +222,16 @@ export const StudentDataProvider = ({ children }: { children: ReactNode }) => {
     }
 
     try {
-      console.log(`Updating notes for student ${studentId}`);
+      console.log(`Updating notes for person ${personId}`);
       
-      // Update the student notes in the database
+      // Update the person notes in the database
       const { data, error } = await supabase
         .from('students')
         .update({
           notes,
           updated_at: new Date().toISOString()
         })
-        .eq('id', studentId);
+        .eq('id', personId);
       
       if (error) {
         console.error("Supabase notes update error:", error);
@@ -241,27 +241,27 @@ export const StudentDataProvider = ({ children }: { children: ReactNode }) => {
       console.log("Notes update successful:", data);
       
       // Update the local state
-      setStudents(prevStudents => {
-        const updatedStudents = prevStudents.map(student => {
-          if (student.id === studentId) {
-            return { ...student, notes };
+      setPersons(prevPersons => {
+        const updatedPersons = prevPersons.map(person => {
+          if (person.id === personId) {
+            return { ...person, notes };
           }
-          return student;
+          return person;
         });
         
-        localStorage.setItem('students', JSON.stringify(updatedStudents));
-        return updatedStudents;
+        localStorage.setItem('students', JSON.stringify(updatedPersons));
+        return updatedPersons;
       });
       
       toast({
         title: "Notes Updated",
-        description: "Student notes have been saved.",
+        description: "Person notes have been saved.",
       });
     } catch (error) {
-      console.error("Error updating student notes:", error);
+      console.error("Error updating person notes:", error);
       toast({
         title: "Update Failed",
-        description: "Could not update the student notes. Please try again.",
+        description: "Could not update the person notes. Please try again.",
         variant: "destructive"
       });
     }
@@ -280,14 +280,14 @@ export const StudentDataProvider = ({ children }: { children: ReactNode }) => {
     try {
       console.log("Resetting all data");
       
-      // Reset students table in the database
+      // Reset persons table in the database
       const { error: truncateError } = await supabase
         .from('students')
         .delete()
         .not('id', 'is', null);
       
       if (truncateError) {
-        console.error("Error deleting students:", truncateError);
+        console.error("Error deleting persons:", truncateError);
         throw truncateError;
       }
       
@@ -295,18 +295,18 @@ export const StudentDataProvider = ({ children }: { children: ReactNode }) => {
       const { error: insertError } = await supabase
         .from('students')
         .insert(
-          initialStudents.map(student => ({
-            id: student.id,
-            name: student.name,
-            level: student.level,
-            history: student.history,
-            notes: student.notes,
-            zero_count: student.zeroCount
+          initialPersons.map(person => ({
+            id: person.id,
+            name: person.name,
+            level: person.level,
+            history: person.history,
+            notes: person.notes,
+            zero_count: person.zeroCount
           }))
         );
       
       if (insertError) {
-        console.error("Error inserting student data:", insertError);
+        console.error("Error inserting person data:", insertError);
         throw insertError;
       }
       
@@ -338,9 +338,9 @@ export const StudentDataProvider = ({ children }: { children: ReactNode }) => {
       console.log("Data reset successful");
       
       // Update local state
-      setStudents(initialStudents);
+      setPersons(initialPersons);
       setActivityLog([resetMessage]);
-      localStorage.setItem('students', JSON.stringify(initialStudents));
+      localStorage.setItem('students', JSON.stringify(initialPersons));
       localStorage.setItem('activityLog', JSON.stringify([resetMessage]));
       
       toast({
@@ -359,22 +359,22 @@ export const StudentDataProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <StudentDataContext.Provider value={{ 
-      students, 
-      updateStudentLevel, 
-      updateStudentNotes, 
+    <PersonDataContext.Provider value={{ 
+      persons, 
+      updatePersonLevel, 
+      updatePersonNotes, 
       resetAllData,
       activityLog
     }}>
       {children}
-    </StudentDataContext.Provider>
+    </PersonDataContext.Provider>
   );
 };
 
-export const useStudentData = () => {
-  const context = useContext(StudentDataContext);
+export const usePersonData = () => {
+  const context = useContext(PersonDataContext);
   if (context === undefined) {
-    throw new Error('useStudentData must be used within a StudentDataProvider');
+    throw new Error('usePersonData must be used within a PersonDataProvider');
   }
   return context;
 };

@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import Dashboard from "@/components/Dashboard";
 import LoginForm from "@/components/LoginForm";
 import { UserProvider } from "@/contexts/UserContext";
-import { StudentDataProvider } from "@/contexts/StudentDataContext";
+import { PersonDataProvider } from "@/contexts/PersonDataContext";
 
 const Index = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -16,7 +16,7 @@ const Index = () => {
   
   return (
     <UserProvider>
-      <StudentDataProvider>
+      <PersonDataProvider>
         <div className="min-h-screen bg-gray-50">
           {isLoggedIn ? (
             <Dashboard setIsLoggedIn={setIsLoggedIn} />
@@ -24,7 +24,7 @@ const Index = () => {
             <LoginForm setIsLoggedIn={setIsLoggedIn} />
           )}
         </div>
-      </StudentDataProvider>
+      </PersonDataProvider>
     </UserProvider>
   );
 };

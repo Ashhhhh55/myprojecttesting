@@ -2,54 +2,54 @@
 import { useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useStudentData, Student } from "@/contexts/StudentDataContext";
+import { usePersonData, Person } from "@/contexts/PersonDataContext";
 import { LineChart as RechartsLineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 interface LineChartProps {
-  selectedStudent: Student;
-  onStudentChange: (student: Student) => void;
+  selectedPerson: Person;
+  onPersonChange: (person: Person) => void;
 }
 
-const LineChart = ({ selectedStudent, onStudentChange }: LineChartProps) => {
-  const { students } = useStudentData();
+const LineChart = ({ selectedPerson, onPersonChange }: LineChartProps) => {
+  const { persons } = usePersonData();
   
-  // Find selected student if it doesn't exist
+  // Find selected person if it doesn't exist
   useEffect(() => {
-    if (!selectedStudent && students.length > 0) {
-      onStudentChange(students[0]);
+    if (!selectedPerson && persons.length > 0) {
+      onPersonChange(persons[0]);
     }
-  }, [selectedStudent, students, onStudentChange]);
+  }, [selectedPerson, persons, onPersonChange]);
 
-  const handleStudentChange = (value: string) => {
-    const student = students.find(s => s.id.toString() === value);
-    if (student) {
-      onStudentChange(student);
+  const handlePersonChange = (value: string) => {
+    const person = persons.find(s => s.id.toString() === value);
+    if (person) {
+      onPersonChange(person);
     }
   };
 
   // Convert history data to format expected by Recharts
-  const chartData = selectedStudent?.history.map((value, index) => ({
+  const chartData = selectedPerson?.history.map((value, index) => ({
     name: `${index + 1}`,
     value: value
   })) || [];
 
-  if (!selectedStudent) return null;
+  if (!selectedPerson) return null;
 
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <CardTitle className="text-lg md:text-xl">Line Graph</CardTitle>
         <Select 
-          value={selectedStudent.id.toString()} 
-          onValueChange={handleStudentChange}
+          value={selectedPerson.id.toString()} 
+          onValueChange={handlePersonChange}
         >
           <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Select student" />
+            <SelectValue placeholder="Select person" />
           </SelectTrigger>
           <SelectContent>
-            {students.map((student) => (
-              <SelectItem key={student.id} value={student.id.toString()}>
-                <span className="arabic-text">{student.name}</span>
+            {persons.map((person) => (
+              <SelectItem key={person.id} value={person.id.toString()}>
+                <span className="arabic-text">{person.name}</span>
               </SelectItem>
             ))}
           </SelectContent>
@@ -69,7 +69,7 @@ const LineChart = ({ selectedStudent, onStudentChange }: LineChartProps) => {
               <Line 
                 type="monotone" 
                 dataKey="value" 
-                name={selectedStudent.name}
+                name={selectedPerson.name}
                 stroke="#3b82f6" 
                 strokeWidth={2}
                 activeDot={{ r: 6 }}
