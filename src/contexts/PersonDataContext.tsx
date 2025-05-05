@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { toast } from '@/components/ui/use-toast';
 import { useUser } from './UserContext';
@@ -11,12 +10,14 @@ export interface Person {
   history: number[];
   notes: string;
   zeroCount: number;
+  adminNotes?: Record<string, string>;
 }
 
 interface PersonDataContextType {
   persons: Person[];
   updatePersonLevel: (personId: number, newLevel: number) => void;
   updatePersonNotes: (personId: number, notes: string) => void;
+  updatePersonAdminNotes: (personId: number, adminName: string, notes: string) => void;
   resetAllData: () => void;
   activityLog: string[];
 }
@@ -24,11 +25,11 @@ interface PersonDataContextType {
 const PersonDataContext = createContext<PersonDataContextType | undefined>(undefined);
 
 const initialPersons: Person[] = [
-  { id: 1, name: 'يوسف', level: 5, history: [5], notes: '', zeroCount: 0 },
-  { id: 2, name: 'نور', level: 4, history: [4], notes: '', zeroCount: 0 },
-  { id: 3, name: 'علي', level: 3, history: [3], notes: '', zeroCount: 0 },
-  { id: 4, name: 'محمود', level: 2, history: [2], notes: '', zeroCount: 0 },
-  { id: 5, name: 'كريم', level: 1, history: [1], notes: '', zeroCount: 0 },
+  { id: 1, name: 'يوسف', level: 5, history: [5], notes: '', zeroCount: 0, adminNotes: {} },
+  { id: 2, name: 'نور', level: 4, history: [4], notes: '', zeroCount: 0, adminNotes: {} },
+  { id: 3, name: 'علي', level: 3, history: [3], notes: '', zeroCount: 0, adminNotes: {} },
+  { id: 4, name: 'محمود', level: 2, history: [2], notes: '', zeroCount: 0, adminNotes: {} },
+  { id: 5, name: 'كريم', level: 1, history: [1], notes: '', zeroCount: 0, adminNotes: {} },
 ];
 
 export const PersonDataProvider = ({ children }: { children: ReactNode }) => {
@@ -69,7 +70,8 @@ export const PersonDataProvider = ({ children }: { children: ReactNode }) => {
           level: person.level,
           history: person.history,
           notes: person.notes,
-          zeroCount: person.zero_count
+          zeroCount: person.zero_count,
+          adminNotes: person.admin_notes || {}
         }));
         
         // Format logs data to match our interface
@@ -255,13 +257,102 @@ export const PersonDataProvider = ({ children }: { children: ReactNode }) => {
       
       toast({
         title: "Notes Updated",
-        description: "Person notes have been saved.",
+        description: "General notes have been saved.",
       });
     } catch (error) {
       console.error("Error updating person notes:", error);
       toast({
         title: "Update Failed",
         description: "Could not update the person notes. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const updatePersonAdminNotes = async (personId: number, adminName: string, notes: string) => {
+    if (!isAdmin || !adminName || adminName === 'Guest') {
+      toast({
+        title: "Access Denied",
+        description: "Only admins can modify admin-specific notes.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      console.log(`Updating admin notes for person ${personId} by ${adminName}`);
+      
+      // First get the current person to access their admin notes
+      const person = persons.find(p => p.id === personId);
+      if (!person) return;
+      
+      // Create updated admin notes object
+      const updatedAdminNotes = {
+        ...(person.adminNotes || {}),
+        [adminName]: notes
+      };
+      
+      // Update the admin notes in the database
+      const { data, error } = await supabase
+        .from('students')
+        .update({
+          admin_notes: updatedAdminNotes,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', personId);
+      
+      if (error) {
+        console.error("Supabase admin notes update error:", error);
+        throw error;
+      }
+      
+      console.log("Admin notes update successful:", data);
+      
+      // Update the local state
+      setPersons(prevPersons => {
+        const updatedPersons = prevPersons.map(person => {
+          if (person.id === personId) {
+            return { 
+              ...person, 
+              adminNotes: updatedAdminNotes
+            };
+          }
+          return person;
+        });
+        
+        localStorage.setItem('students', JSON.stringify(updatedPersons));
+        return updatedPersons;
+      });
+      
+      // Log the activity
+      const activityMessage = `${new Date().toLocaleString()}: ${adminName} updated their notes for ${person.name}`;
+      
+      const { error: logError } = await supabase
+        .from('activity_logs')
+        .insert({
+          message: activityMessage
+        });
+      
+      if (logError) {
+        console.error("Supabase activity log error:", logError);
+        throw logError;
+      }
+      
+      setActivityLog(prev => {
+        const updated = [activityMessage, ...prev];
+        localStorage.setItem('activityLog', JSON.stringify(updated));
+        return updated;
+      });
+      
+      toast({
+        title: "Admin Notes Updated",
+        description: `Your personal notes for ${person.name} have been saved.`,
+      });
+    } catch (error) {
+      console.error("Error updating admin notes:", error);
+      toast({
+        title: "Update Failed",
+        description: "Could not update your admin notes. Please try again.",
         variant: "destructive"
       });
     }
@@ -301,7 +392,8 @@ export const PersonDataProvider = ({ children }: { children: ReactNode }) => {
             level: person.level,
             history: person.history,
             notes: person.notes,
-            zero_count: person.zeroCount
+            zero_count: person.zeroCount,
+            admin_notes: person.adminNotes || {}
           }))
         );
       
@@ -362,7 +454,8 @@ export const PersonDataProvider = ({ children }: { children: ReactNode }) => {
     <PersonDataContext.Provider value={{ 
       persons, 
       updatePersonLevel, 
-      updatePersonNotes, 
+      updatePersonNotes,
+      updatePersonAdminNotes, 
       resetAllData,
       activityLog
     }}>
