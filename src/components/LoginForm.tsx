@@ -83,7 +83,7 @@ const LoginForm = ({ setIsLoggedIn }: LoginFormProps) => {
     <div className="flex items-center justify-center min-h-screen p-4 bg-gray-50">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1 text-center">
-          <CardTitle className="text-2xl">ألجراف</CardTitle>
+          <CardTitle className="text-2xl">الجراف</CardTitle>
           <CardDescription>
             View the dashboard or login as admin to make changes
           </CardDescription>

@@ -18,7 +18,7 @@ const Header = ({ onLogout, onReset, isGuest }: HeaderProps) => {
     <header className="bg-white shadow-sm sticky top-0 z-10">
       <div className="container flex justify-between items-center py-4">
         <div className="flex items-center">
-          <h1 className="text-2xl font-bold arabic-text">ألجراف</h1>
+          <h1 className="text-2xl font-bold arabic-text">الجراف</h1>
         </div>
         
         {/* Desktop navigation */}
