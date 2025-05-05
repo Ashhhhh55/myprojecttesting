@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { toast } from '@/components/ui/use-toast';
 import { useUser } from './UserContext';
@@ -71,6 +72,7 @@ export const PersonDataProvider = ({ children }: { children: ReactNode }) => {
           history: person.history,
           notes: person.notes,
           zeroCount: person.zero_count,
+          // Safely access admin_notes or default to empty object
           adminNotes: person.admin_notes || {}
         }));
         
