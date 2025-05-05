@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -15,10 +14,9 @@ interface NotesSectionProps {
 }
 
 const NotesSection = ({ isGuest = false }: NotesSectionProps) => {
-  const { persons, updatePersonNotes, updatePersonAdminNotes } = usePersonData();
+  const { persons, updatePersonAdminNotes } = usePersonData();
   const { currentUser } = useUser();
   const [selectedPersonId, setSelectedPersonId] = useState(persons[0]?.id.toString() || "1");
-  const [notes, setNotes] = useState('');
   const [adminNotes, setAdminNotes] = useState('');
   const [isPlaying, setIsPlaying] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -27,8 +25,6 @@ const NotesSection = ({ isGuest = false }: NotesSectionProps) => {
   useEffect(() => {
     const person = persons.find(s => s.id.toString() === selectedPersonId);
     if (person) {
-      setNotes(person.notes);
-      
       // Set admin notes if available for current user
       if (person.adminNotes && currentUser && person.adminNotes[currentUser]) {
         setAdminNotes(person.adminNotes[currentUser]);
@@ -37,13 +33,6 @@ const NotesSection = ({ isGuest = false }: NotesSectionProps) => {
       }
     }
   }, [selectedPersonId, persons, currentUser]);
-
-  // Handle general notes change
-  const handleNotesChange = (value: string) => {
-    if (isGuest) return;
-    setNotes(value);
-    updatePersonNotes(parseInt(selectedPersonId, 10), value);
-  };
 
   // Handle admin-specific notes change
   const handleAdminNotesChange = (value: string) => {
@@ -84,19 +73,20 @@ const NotesSection = ({ isGuest = false }: NotesSectionProps) => {
     setIsPlaying(false);
   };
 
-  const audioUrl = "Ashhhhh55/myprojecttesting/src/components/sound/Habobty.opus";
+  const audioUrl = "Ashhhhh55/myprojecttesting/src/components/sound/Habobty.mp3";
   const adminNotesList = getAdminNotesList();
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="text-lg md:text-xl arabic-text">ملاحظات</CardTitle>
-        {isGuest && (
-          <div className="text-sm text-amber-500">View-only mode</div>
-        )}
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
+    <div className="space-y-4">
+      {/* Person Selection */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between pb-2">
+          <CardTitle className="text-lg md:text-xl arabic-text">ملاحظات</CardTitle>
+          {isGuest && (
+            <div className="text-sm text-amber-500">View-only mode</div>
+          )}
+        </CardHeader>
+        <CardContent>
           <Select 
             value={selectedPersonId} 
             onValueChange={setSelectedPersonId}
@@ -112,51 +102,50 @@ const NotesSection = ({ isGuest = false }: NotesSectionProps) => {
               ))}
             </SelectContent>
           </Select>
+        </CardContent>
+      </Card>
           
-          {/* Voice Note Section */}
-          <div className="space-y-2 border p-3 rounded-md">
-            <Label className="flex items-center gap-2">
-              <Headphones className="h-4 w-4" />
-              Voice Note
-            </Label>
-            <audio 
-              ref={audioRef}
-              src={audioUrl} 
-              onEnded={handleAudioEnded}
-              className="hidden"
-            />
-            <Button 
-              onClick={togglePlayAudio} 
-              variant="outline" 
-              className="w-full flex items-center justify-center gap-2"
-            >
-              {isPlaying ? (
-                <>
-                  <VolumeX className="h-4 w-4" />
-                  Stop Playing
-                </>
-              ) : (
-                <>
-                  <Volume className="h-4 w-4" />
-                  Play Voice Note
-                </>
-              )}
-            </Button>
-          </div>
-          
-          {/* General Notes */}
-          <div className="space-y-2">
-            <Label htmlFor="general-notes">General Notes</Label>
-            <Textarea 
-              id="general-notes"
-              placeholder={isGuest ? "Notes are view-only in guest mode" : "Add general notes for this person..."}
-              className="min-h-[80px]"
-              value={notes}
-              onChange={(e) => handleNotesChange(e.target.value)}
-              disabled={isGuest}
-            />
-          </div>
-          
+      {/* Voice Note Section - Now as a separate card */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-lg md:text-xl flex items-center gap-2">
+            <Headphones className="h-5 w-5" />
+            Voice Note
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <audio 
+            ref={audioRef}
+            src={audioUrl} 
+            onEnded={handleAudioEnded}
+            className="hidden"
+          />
+          <Button 
+            onClick={togglePlayAudio} 
+            variant="outline" 
+            className="w-full flex items-center justify-center gap-2"
+          >
+            {isPlaying ? (
+              <>
+                <VolumeX className="h-4 w-4" />
+                Stop Playing
+              </>
+            ) : (
+              <>
+                <Volume className="h-4 w-4" />
+                Play Voice Note
+              </>
+            )}
+          </Button>
+        </CardContent>
+      </Card>
+      
+      {/* Admin Notes Section */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-lg md:text-xl">Admin Notes</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
           {/* Admin Specific Notes */}
           {!isGuest && currentUser && currentUser !== 'Guest' && (
             <div className="space-y-2">
@@ -188,9 +177,9 @@ const NotesSection = ({ isGuest = false }: NotesSectionProps) => {
               </CollapsibleContent>
             </Collapsible>
           )}
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 
