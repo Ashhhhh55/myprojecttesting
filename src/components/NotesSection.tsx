@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+
+import { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
@@ -6,7 +7,8 @@ import { usePersonData } from "@/contexts/PersonDataContext";
 import { useUser } from '@/contexts/UserContext';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Label } from "@/components/ui/label";
-import { FileText } from "lucide-react";
+import { FileText, Headphones, Volume, VolumeX } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface NotesSectionProps {
   isGuest?: boolean;
@@ -18,6 +20,8 @@ const NotesSection = ({ isGuest = false }: NotesSectionProps) => {
   const [selectedPersonId, setSelectedPersonId] = useState(persons[0]?.id.toString() || "1");
   const [notes, setNotes] = useState('');
   const [adminNotes, setAdminNotes] = useState('');
+  const [isPlaying, setIsPlaying] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   // Update notes when selected person changes
   useEffect(() => {
@@ -61,6 +65,26 @@ const NotesSection = ({ isGuest = false }: NotesSectionProps) => {
       }));
   };
 
+  // Toggle audio playback
+  const togglePlayAudio = () => {
+    if (!audioRef.current) return;
+    
+    if (isPlaying) {
+      audioRef.current.pause();
+    } else {
+      audioRef.current.play().catch(error => {
+        console.error("Audio playback error:", error);
+      });
+    }
+    setIsPlaying(!isPlaying);
+  };
+
+  // Audio playback ended handler
+  const handleAudioEnded = () => {
+    setIsPlaying(false);
+  };
+
+  const audioUrl = "Ashhhhh55/myprojecttesting/src/components/sound/Habobty.opus";
   const adminNotesList = getAdminNotesList();
 
   return (
@@ -88,6 +112,37 @@ const NotesSection = ({ isGuest = false }: NotesSectionProps) => {
               ))}
             </SelectContent>
           </Select>
+          
+          {/* Voice Note Section */}
+          <div className="space-y-2 border p-3 rounded-md">
+            <Label className="flex items-center gap-2">
+              <Headphones className="h-4 w-4" />
+              Voice Note
+            </Label>
+            <audio 
+              ref={audioRef}
+              src={audioUrl} 
+              onEnded={handleAudioEnded}
+              className="hidden"
+            />
+            <Button 
+              onClick={togglePlayAudio} 
+              variant="outline" 
+              className="w-full flex items-center justify-center gap-2"
+            >
+              {isPlaying ? (
+                <>
+                  <VolumeX className="h-4 w-4" />
+                  Stop Playing
+                </>
+              ) : (
+                <>
+                  <Volume className="h-4 w-4" />
+                  Play Voice Note
+                </>
+              )}
+            </Button>
+          </div>
           
           {/* General Notes */}
           <div className="space-y-2">

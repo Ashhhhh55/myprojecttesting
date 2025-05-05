@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useUser } from "@/contexts/UserContext";
+import { Volume } from "lucide-react";
 
 interface HeaderProps {
   onLogout: () => void;
@@ -17,8 +18,9 @@ const Header = ({ onLogout, onReset, isGuest }: HeaderProps) => {
   return (
     <header className="bg-white shadow-sm sticky top-0 z-10">
       <div className="container flex justify-between items-center py-4">
-        <div className="flex items-center">
+        <div className="flex items-center gap-2">
           <h1 className="text-2xl font-bold arabic-text">الجراف</h1>
+          <Volume className="h-5 w-5 text-blue-500" />
         </div>
         
         {/* Desktop navigation */}
