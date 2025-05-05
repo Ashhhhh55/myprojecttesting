@@ -29,6 +29,7 @@ export type Database = {
       }
       students: {
         Row: {
+          admin_notes: Json | null
           created_at: string
           history: number[]
           id: number
@@ -39,6 +40,7 @@ export type Database = {
           zero_count: number
         }
         Insert: {
+          admin_notes?: Json | null
           created_at?: string
           history?: number[]
           id?: number
@@ -49,6 +51,7 @@ export type Database = {
           zero_count?: number
         }
         Update: {
+          admin_notes?: Json | null
           created_at?: string
           history?: number[]
           id?: number

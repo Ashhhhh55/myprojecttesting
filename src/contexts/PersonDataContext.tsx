@@ -72,8 +72,8 @@ export const PersonDataProvider = ({ children }: { children: ReactNode }) => {
           history: person.history,
           notes: person.notes,
           zeroCount: person.zero_count,
-          // Safely access admin_notes or default to empty object
-          adminNotes: person.admin_notes || {}
+          // TypeScript safe access to admin_notes - handle as any first then convert
+          adminNotes: (person as any).admin_notes || {}
         }));
         
         // Format logs data to match our interface
